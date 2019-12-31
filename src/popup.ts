@@ -11,12 +11,12 @@ import './popup.css';
   // More information on Permissions can we found at
   // https://developer.chrome.com/extensions/declare_permissions
   const counterStorage = {
-    get: cb => {
+    get: (cb: (newValue: number) => void) => {
       chrome.storage.sync.get(['count'], result => {
         cb(result.count);
       });
     },
-    set: (value, cb) => {
+    set: (value: number, cb: () => void) => {
       chrome.storage.sync.set(
         {
           count: value,
@@ -29,7 +29,7 @@ import './popup.css';
   };
 
   function setupCounter(initialValue = 0) {
-    document.getElementById('counter').innerHTML = initialValue;
+    document.getElementById('counter').innerHTML = initialValue.toString();
 
     document.getElementById('incrementBtn').addEventListener('click', () => {
       updateCounter({
@@ -44,9 +44,9 @@ import './popup.css';
     });
   }
 
-  function updateCounter({ type }) {
+  function updateCounter({ type }: { type: 'INCREMENT' | 'DECREMENT' }) {
     counterStorage.get(count => {
-      let newCount;
+      let newCount: number;
 
       if (type === 'INCREMENT') {
         newCount = count + 1;
@@ -57,7 +57,7 @@ import './popup.css';
       }
 
       counterStorage.set(newCount, () => {
-        document.getElementById('counter').innerHTML = newCount;
+        document.getElementById('counter').innerHTML = newCount.toString();
 
         // Communicate with content script of
         // active tab by sending a message
