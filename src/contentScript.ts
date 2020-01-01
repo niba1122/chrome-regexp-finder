@@ -1,4 +1,4 @@
-import { isSearch, isNextResult } from "./message-type"
+import { isSearch, isNextResult, isClearResult } from "./message-type"
 
 interface PageSearcher {
   search: (query: string) => Node[]
@@ -12,7 +12,7 @@ function createPageSearcher(rootDOM: Node): PageSearcher {
         if (node.nodeValue && node.nodeValue.match(query)) {
           matchedNodes.push(node)
         }
-      } else {
+      } else if (node.nodeType === Node.ELEMENT_NODE && node.nodeName !== 'SCRIPT') {
         matchedNodes = matchedNodes.concat(_searchRecursively(node, query))
       }
     })
@@ -57,7 +57,6 @@ function initialize() {
   let resultIndex = 0
 
   chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
-
     if (isSearch(request)) {
       matchedSentences.forEach((node) => {
         const newNode = document.createTextNode(node.textContent)
@@ -82,7 +81,9 @@ function initialize() {
 
       matchedSentences = newNodes
       matchedTexts = Array.from(document.querySelectorAll('span.ps-matched-text'))
-      resultIndex = 0
+      resultIndex = 0;
+      (matchedTexts[resultIndex] as Element).classList.add(HighlightedClass)
+      scrollToElement(matchedTexts[resultIndex] as Element, -150)
     } else if (isNextResult(request)) {
       (matchedTexts[resultIndex] as Element).classList.remove(HighlightedClass)
       resultIndex++
@@ -91,6 +92,14 @@ function initialize() {
       }
       (matchedTexts[resultIndex] as Element).classList.add(HighlightedClass)
       scrollToElement(matchedTexts[resultIndex] as Element, -150)
+    } else if (isClearResult(request)) {
+      matchedSentences.forEach((node) => {
+        const newNode = document.createTextNode(node.textContent)
+        node.parentNode.replaceChild(newNode, node)
+      })
+      matchedSentences = []
+      matchedTexts = []
+      resultIndex = 0
     }
 
     // Send an empty response
