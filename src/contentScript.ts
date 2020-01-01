@@ -29,13 +29,36 @@ function createPageSearcher(rootDOM: Node): PageSearcher {
   }
 }
 
+let matchedNodes: Node[] = []
+
 function initialize() {
   const pageSearcher = createPageSearcher(document.body)
 
   chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
+
     if (isSearch(request)) {
-      const doms = pageSearcher.search(request.payload.query)
-      console.log('doms: ', doms)
+      matchedNodes.forEach((node) => {
+        const newNode = document.createTextNode(node.textContent)
+        node.parentNode.replaceChild(newNode, node)
+      })
+
+      const nodes = pageSearcher.search(request.payload.query)
+
+      const newNodes: Node[] = []
+      nodes.forEach((node) => {
+        const text = node.nodeValue
+        const t = text.replace(new RegExp(request.payload.query, 'g'), '<span style="background-color: #ff8000;">$&</span>')
+
+        const newNode = document.createElement('span')
+        newNode.innerHTML = t
+        newNode.classList.add('ps-highlighted')
+
+        newNodes.push(newNode)
+
+        node.parentNode.replaceChild(newNode, node)
+      })
+
+      matchedNodes = newNodes
     }
 
     // Send an empty response
