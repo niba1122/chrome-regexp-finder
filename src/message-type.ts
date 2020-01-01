@@ -4,7 +4,8 @@ interface Message {
 }
 
 export enum MessageType {
-  Search = 'SEARCH'
+  Search = 'SEARCH',
+  NextResult = 'NEXT_RESULT'
 }
 
 export interface Search extends Message {
@@ -16,4 +17,12 @@ export interface Search extends Message {
 
 export function isSearch(message: Message): message is Search {
   return message.type === MessageType.Search
+}
+
+export interface NextResult extends Message {
+  type: MessageType.NextResult,
+}
+
+export function isNextResult(message: Message): message is NextResult {
+  return message.type === MessageType.NextResult
 }

@@ -1,4 +1,4 @@
-import { isSearch } from "./message-type"
+import { isSearch, isNextResult } from "./message-type"
 
 interface PageSearcher {
   search: (query: string) => Node[]
@@ -29,15 +29,23 @@ function createPageSearcher(rootDOM: Node): PageSearcher {
   }
 }
 
-let matchedNodes: Node[] = []
+function scrollToElement(element: Element, offset: number = 100) {
+  const clientRect = element.getBoundingClientRect()
+  const y = window.pageYOffset + clientRect.top + offset
+  scrollTo(0, y)
+}
 
 function initialize() {
   const pageSearcher = createPageSearcher(document.body)
 
+  let matchedSentences: Node[] = []
+  let matchedTexts: Node[] = []
+  let resultIndex = 0
+
   chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
 
     if (isSearch(request)) {
-      matchedNodes.forEach((node) => {
+      matchedSentences.forEach((node) => {
         const newNode = document.createTextNode(node.textContent)
         node.parentNode.replaceChild(newNode, node)
       })
@@ -47,18 +55,26 @@ function initialize() {
       const newNodes: Node[] = []
       nodes.forEach((node) => {
         const text = node.nodeValue
-        const t = text.replace(new RegExp(request.payload.query, 'g'), '<span style="background-color: #ff8000;">$&</span>')
+        const t = text.replace(new RegExp(request.payload.query, 'g'), '<span style="background-color: #ffff00;" class="ps-matched-text">$&</span>')
 
         const newNode = document.createElement('span')
         newNode.innerHTML = t
-        newNode.classList.add('ps-highlighted')
+        newNode.classList.add('ps-matched-sentence')
 
         newNodes.push(newNode)
 
         node.parentNode.replaceChild(newNode, node)
       })
 
-      matchedNodes = newNodes
+      matchedSentences = newNodes
+      matchedTexts = Array.from(document.querySelectorAll('span.ps-matched-text'))
+      resultIndex = 0
+    } else if (isNextResult(request)) {
+      resultIndex++
+      if (matchedTexts.length === resultIndex) {
+        resultIndex = 0
+      }
+      scrollToElement(matchedTexts[resultIndex] as Element, -150)
     }
 
     // Send an empty response
