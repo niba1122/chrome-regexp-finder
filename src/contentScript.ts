@@ -1,43 +1,48 @@
-'use strict';
+import { isSearch } from "./message-type"
 
-// Content script file will run in the context of web page.
-// With content script you can manipulate the web pages using
-// Document Object Model (DOM).
-// You can also pass information to the parent extension.
+interface PageSearcher {
+  search: (query: string) => Node[]
+}
 
-// We execute this script by making an entry in manifest.json file
-// under `content_scripts` property
-
-// For more information on Content Scripts,
-// See https://developer.chrome.com/extensions/content_scripts
-
-// Log `title` of current active web page
-const pageTitle = document.head.getElementsByTagName('title')[0].innerHTML;
-console.log(
-  `Page title is: '${pageTitle}' - evaluated by Chrome extension's 'contentScript.js' file`
-);
-
-// Communicate with background file by sending a message
-chrome.runtime.sendMessage(
-  {
-    type: 'GREETINGS',
-    payload: {
-      message: 'Hello, my name is Con. I am from ContentScript.',
-    },
-  },
-  response => {
-    console.log(response.message);
-  }
-);
-
-// Listen for message
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.type === 'COUNT') {
-    console.log(`Current count is ${request.payload.count}`);
+function createPageSearcher(rootDOM: Node): PageSearcher {
+  function _searchRecursively(dom: Node, query: string): Node[] {
+    let matchedNodes: Node[] = []
+    dom.childNodes.forEach((node) => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        if (node.nodeValue && node.nodeValue.match(query)) {
+          matchedNodes.push(node)
+        }
+      } else {
+        matchedNodes = matchedNodes.concat(_searchRecursively(node, query))
+      }
+    })
+    return matchedNodes
   }
 
-  // Send an empty response
-  // See https://github.com/mozilla/webextension-polyfill/issues/130#issuecomment-531531890
-  sendResponse({});
-  return true;
-});
+  function search(query: string) {
+    const matchedDOMs = _searchRecursively(rootDOM, query)
+    return matchedDOMs
+  }
+
+  return {
+    search
+  }
+}
+
+function initialize() {
+  const pageSearcher = createPageSearcher(document.body)
+
+  chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
+    if (isSearch(request)) {
+      const doms = pageSearcher.search(request.payload.query)
+      console.log('doms: ', doms)
+    }
+
+    // Send an empty response
+    // See https://github.com/mozilla/webextension-polyfill/issues/130#issuecomment-531531890
+    sendResponse({});
+    return true;
+  });
+}
+
+initialize()

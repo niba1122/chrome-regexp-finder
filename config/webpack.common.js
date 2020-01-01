@@ -50,6 +50,9 @@ const common = {
       },
     ],
   },
+  resolve: {
+    extensions: [ '.tsx', '.ts', '.js' ],
+  },
   plugins: [
     // Print file sizes
     new SizePlugin(),
