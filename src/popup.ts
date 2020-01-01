@@ -8,6 +8,8 @@ const searchFormTextDOM = document.getElementById('search-form-text') as HTMLInp
 
 let previousQuery = ''
 
+searchFormTextDOM.focus()
+
 searchFormDOM.addEventListener('submit', (e) => {
   e.preventDefault()
   const query = searchFormTextDOM.value
