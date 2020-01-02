@@ -1,18 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>My Chrome Extension</title>
-    <link rel="stylesheet" href="popup.css" />
+<meta charset="UTF-8">
+<title>Page Searcher</title>
+<link rel="stylesheet" href="popup.css" />
 </head>
 <body>
-  <div>
-    <form id="search-form">
-      <input type="text" id="search-form-text" />
-      <input type="submit" value="search" />
-    </form>
-  </div>
-
-  <script src="popup.js"></script>
+<div class="app">
+  <form class="search-form" id="search-form">
+    <input class="search-form-text" type="text" id="search-form-text" />
+    <input class="search-form-submit-button" type="submit" value="search" />
+  </form>
+</div>
+<script src="popup.js"></script>
 </body>
 </html>
