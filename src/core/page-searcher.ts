@@ -1,13 +1,18 @@
+type ChangeHighlightListener = (total: number, current: number) => void
+type Unsubscriber = () => void
+
 interface PageSearcher {
   search: (query: string) => void
   nextResult: () => void
   clear: () => void
+  addChangeHighlightListener: (listener: ChangeHighlightListener) => Unsubscriber
 }
 
 export function createPageSearcher(rootDOM: Node): PageSearcher {
   let matchedSentences: Node[] = []
   let matchedTexts: Node[] = []
   let resultIndex = 0
+  let changeHighlightListener: ChangeHighlightListener | null = null
 
   function scrollToElement(element: Element, offset: number = 100) {
     const clientRect = element.getBoundingClientRect()
@@ -56,6 +61,9 @@ export function createPageSearcher(rootDOM: Node): PageSearcher {
     resultIndex = 0;
     (matchedTexts[resultIndex] as HTMLElement).style.backgroundColor = '#ff8000'
     scrollToElement(matchedTexts[resultIndex] as Element, -150)
+    if (changeHighlightListener) {
+      changeHighlightListener(matchedTexts.length, resultIndex)
+    }
   }
 
   function nextResult() {
@@ -66,6 +74,9 @@ export function createPageSearcher(rootDOM: Node): PageSearcher {
     }
     (matchedTexts[resultIndex] as HTMLElement).style.backgroundColor = '#ff8000'
     scrollToElement(matchedTexts[resultIndex] as Element, -150)
+    if (changeHighlightListener) {
+      changeHighlightListener(matchedTexts.length, resultIndex)
+    }
   }
 
   function clear() {
@@ -76,11 +87,22 @@ export function createPageSearcher(rootDOM: Node): PageSearcher {
     matchedSentences = []
     matchedTexts = []
     resultIndex = 0
+    if (changeHighlightListener) {
+      changeHighlightListener(matchedTexts.length, resultIndex)
+    }
+  }
+
+  function addChangeHighlightListener(listener: ChangeHighlightListener) {
+    changeHighlightListener = listener
+    return () => {
+      changeHighlightListener = null
+    }
   }
 
   return {
     search,
     nextResult,
-    clear
+    clear,
+    addChangeHighlightListener
   }
 }

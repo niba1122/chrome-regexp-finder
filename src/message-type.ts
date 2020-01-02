@@ -6,7 +6,8 @@ interface Message {
 export enum MessageType {
   Search = 'SEARCH',
   NextResult = 'NEXT_RESULT',
-  ClearResult = 'CLEAR_RESULT'
+  ClearResult = 'CLEAR_RESULT',
+  ChangeHighlight = 'CHANGE_HIGHLIGHT'
 }
 
 export interface Search extends Message {
@@ -34,4 +35,16 @@ export interface ClearResult extends Message {
 
 export function isClearResult(message: Message): message is ClearResult {
   return message.type === MessageType.ClearResult
+}
+
+export interface ChangeHighlight extends Message {
+  type: MessageType.ChangeHighlight,
+  payload: {
+    total: number,
+    current: number
+  }
+}
+
+export function isChangeHighlight(message: Message): message is ChangeHighlight {
+  return message.type === MessageType.ChangeHighlight
 }

@@ -1,8 +1,19 @@
-import { isSearch, isNextResult, isClearResult } from "./message-type"
+import { isSearch, isNextResult, isClearResult, ChangeHighlight, MessageType } from "./message-type"
 import { createPageSearcher } from "./core/page-searcher";
 
 function initialize() {
   const pageSearcher = createPageSearcher(document.body)
+
+  pageSearcher.addChangeHighlightListener((total, current) => {
+    const message: ChangeHighlight = {
+      type: MessageType.ChangeHighlight,
+      payload: {
+        total,
+        current
+      }
+    }
+    chrome.runtime.sendMessage(message)
+  })
 
   chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
     if (isSearch(request)) {

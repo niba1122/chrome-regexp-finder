@@ -1,10 +1,12 @@
 'use strict';
 
 import './popup.css';
-import { Search, MessageType, NextResult, ClearResult } from './message-type';
+import { Search, MessageType, NextResult, ClearResult, isChangeHighlight } from './message-type';
 
 const searchFormDOM = document.getElementById('search-form')
 const searchFormTextDOM = document.getElementById('search-form-text') as HTMLInputElement
+const searchResultTotalDOM = document.getElementById('search-result-total')
+const searchResultCurrentDOM = document.getElementById('search-result-current')
 
 let previousQuery = ''
 
@@ -64,3 +66,12 @@ addEventListener('unload', (_event) => {
     )
   })
 }, true)
+
+chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
+  if (isChangeHighlight(request)) {
+    searchResultTotalDOM.textContent = request.payload.total.toString()
+    searchResultCurrentDOM.textContent = request.payload.current.toString()
+  }
+  sendResponse({})
+  return true
+})
