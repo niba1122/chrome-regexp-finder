@@ -41,7 +41,7 @@ export interface ChangeHighlight extends Message {
   type: MessageType.ChangeHighlight,
   payload: {
     total: number,
-    current: number
+    current?: number
   }
 }
 

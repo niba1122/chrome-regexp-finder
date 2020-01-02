@@ -6,7 +6,7 @@ interface PageSearcher {
 }
 
 namespace PageSearcher {
-  export type ChangeHighlightListener = (total: number, current: number) => void
+  export type ChangeHighlightListener = (total: number, current?: number) => void
   export type Unsubscriber = () => void
 }
 
@@ -22,10 +22,10 @@ interface Store {
 namespace Store {
   export type ClearListener = (highlightGroups: Node[]) => void
   export type ChangeHighlightSelectionListener = (args: {
-    previousHighlight: HTMLElement,
-    nextHighlight: HTMLElement,
+    previousHighlight?: HTMLElement,
+    nextHighlight?: HTMLElement,
     total: number,
-    nextIndex: number
+    nextIndex?: number
   }) => void
 }
 
@@ -63,6 +63,7 @@ function createStore(): Store {
 
   function forwardSelectedHighlight() {
     const previousHighlight = highlights[selectedHighlightIndex]
+    if (!previousHighlight) { return }
     selectedHighlightIndex++
     if (highlights.length === selectedHighlightIndex) {
       selectedHighlightIndex = 0
@@ -116,16 +117,20 @@ export function createPageSearcher(rootDOM: Node): PageSearcher {
     total,
     nextIndex
   }) => {
-    previousHighlight.style.backgroundColor = '#ffff00'
-    nextHighlight.style.backgroundColor = '#ff8000'
+    if (previousHighlight) {
+      previousHighlight.style.backgroundColor = '#ffff00'
+    }
+    if (nextHighlight) {
+      nextHighlight.style.backgroundColor = '#ff8000'
 
-    const offset = -150
-    const clientRect = nextHighlight.getBoundingClientRect()
-    const y = window.pageYOffset + clientRect.top + offset
-    scrollTo(0, y)
+      const offset = -150
+      const clientRect = nextHighlight.getBoundingClientRect()
+      const y = window.pageYOffset + clientRect.top + offset
+      scrollTo(0, y)
+    }
 
     if (changeHighlightListener) {
-      changeHighlightListener(total, nextIndex + 1)
+      changeHighlightListener(total, nextIndex)
     }
   })
 

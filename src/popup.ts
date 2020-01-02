@@ -74,7 +74,8 @@ addEventListener('unload', (_event) => {
 chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
   if (isChangeHighlight(request)) {
     searchResultTotalDOM.textContent = request.payload.total.toString()
-    searchResultCurrentDOM.textContent = request.payload.current.toString()
+    const current = request.payload.current
+    searchResultCurrentDOM.textContent = current !== undefined ? (current + 1).toString() : '0'
   }
   sendResponse({})
   return true
