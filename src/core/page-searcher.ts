@@ -53,7 +53,9 @@ function createStore(): Store {
   }
 
   function clear() {
-    clearListener(highlightGroups)
+    if (clearListener) {
+      clearListener(highlightGroups)
+    }
     highlightGroups = []
     highlights = []
     selectedHighlightIndex = 0
@@ -103,8 +105,8 @@ export function createPageSearcher(rootDOM: Node): PageSearcher {
 
   store.onClear((highlights) => {
     highlights.forEach((node) => {
-      const newNode = document.createTextNode(node.textContent)
-      node.parentNode.replaceChild(newNode, node)
+      const newNode = document.createTextNode(node.textContent || '')
+      node.parentNode?.replaceChild(newNode, node)
     })
   })
 
@@ -156,12 +158,12 @@ export function createPageSearcher(rootDOM: Node): PageSearcher {
     const matchedTextClass = 'ps-matched-text'
     matchedTextNodes.forEach((node) => {
       const text = node.nodeValue
-      const rawHighlightGroup = text.replace(queryRegExp, `<span class="${matchedTextClass}" style="background-color: #ffff00;">$&</span>`)
+      const rawHighlightGroup = text?.replace(queryRegExp, `<span class="${matchedTextClass}" style="background-color: #ffff00;">$&</span>`)
 
       const highlightGroup = document.createElement('span')
-      highlightGroup.innerHTML = rawHighlightGroup
+      highlightGroup.innerHTML = rawHighlightGroup || ''
 
-      node.parentNode.replaceChild(highlightGroup, node)
+      node.parentNode?.replaceChild(highlightGroup, node)
       highlightGroups.push(highlightGroup)
 
       const groupHighlights = Array.prototype.filter.call(

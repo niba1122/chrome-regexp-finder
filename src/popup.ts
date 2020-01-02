@@ -3,10 +3,10 @@
 import './popup.css';
 import { Search, MessageType, NextResult, ClearResult, isChangeHighlight } from './message-type';
 
-const searchFormDOM = document.getElementById('search-form')
+const searchFormDOM = document.getElementById('search-form') as HTMLFormElement
 const searchFormTextDOM = document.getElementById('search-form-text') as HTMLInputElement
-const searchResultTotalDOM = document.getElementById('search-result-total')
-const searchResultCurrentDOM = document.getElementById('search-result-current')
+const searchResultTotalDOM = document.getElementById('search-result-total') as HTMLElement
+const searchResultCurrentDOM = document.getElementById('search-result-current') as HTMLElement
 
 let previousQuery = ''
 
@@ -24,11 +24,12 @@ searchFormDOM.addEventListener('submit', (e) => {
 
     chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
       const tab = tabs[0];
-
-      chrome.tabs.sendMessage(
-        tab.id,
-        message
-      );
+      if (tab.id) {
+        chrome.tabs.sendMessage(
+          tab.id,
+          message
+        );
+      }
     });
   } else {
     const message: Search = {
@@ -39,12 +40,13 @@ searchFormDOM.addEventListener('submit', (e) => {
     }
 
     chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
-      const tab = tabs[0];
-
-      chrome.tabs.sendMessage(
-        tab.id,
-        message
-      );
+      const tab = tabs[0]
+      if (tab.id) {
+        chrome.tabs.sendMessage(
+          tab.id,
+          message
+        );
+      }
     });
   }
   previousQuery = query
@@ -58,8 +60,10 @@ addEventListener('unload', (_event) => {
     payload: undefined
   }
 
+  if (!background) { return }
   background.chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
-    const tab = tabs[0];
+    const tab = tabs[0]
+    if (!tab.id) { return }
     background.chrome.tabs.sendMessage(
       tab.id,
       message
