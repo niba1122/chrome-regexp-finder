@@ -1,24 +1,131 @@
-type ChangeHighlightListener = (total: number, current: number) => void
-type Unsubscriber = () => void
-
 interface PageSearcher {
   search: (query: string) => void
   nextResult: () => void
   clear: () => void
-  addChangeHighlightListener: (listener: ChangeHighlightListener) => Unsubscriber
+  addChangeHighlightListener: (listener: PageSearcher.ChangeHighlightListener) => PageSearcher.Unsubscriber
+}
+
+namespace PageSearcher {
+  export type ChangeHighlightListener = (total: number, current: number) => void
+  export type Unsubscriber = () => void
+}
+
+interface Store {
+  setSearchResult(highlightGroups: HTMLElement[], highlights: HTMLElement[]): void
+  clear(): void
+  forwardSelectedHighlight(): void
+  getSelectedHighlight(): HTMLElement
+  onClear(listener: Store.ClearListener): void
+  onChangeHighlightSelection(listener: Store.ChangeHighlightSelectionListener): void
+}
+
+namespace Store {
+  export type ClearListener = (highlightGroups: Node[]) => void
+  export type ChangeHighlightSelectionListener = (args: {
+    previousHighlight: HTMLElement,
+    nextHighlight: HTMLElement,
+    total: number,
+    nextIndex: number
+  }) => void
+}
+
+function createStateManager(): Store {
+  let highlightGroups: HTMLElement[] = []
+  let highlights: HTMLElement[] = []
+  let selectedHighlightIndex = 0
+
+  let clearListener: Store.ClearListener | null = null
+  let changeHighlightSelectionListener: Store.ChangeHighlightSelectionListener | null = null
+
+  function setSearchResult(hg: HTMLElement[], h: HTMLElement[]) {
+    highlightGroups = hg
+    highlights = h
+    selectedHighlightIndex = 0
+    const previousHighlight = highlights[selectedHighlightIndex]
+    if (changeHighlightSelectionListener) {
+      changeHighlightSelectionListener({
+        previousHighlight: previousHighlight,
+        nextHighlight: highlights[selectedHighlightIndex],
+        total: highlights.length,
+        nextIndex: selectedHighlightIndex
+      })
+    }
+  }
+
+  function clear() {
+    clearListener(highlightGroups)
+    highlightGroups = []
+    highlights = []
+    selectedHighlightIndex = 0
+  }
+
+  function forwardSelectedHighlight() {
+    const previousHighlight = highlights[selectedHighlightIndex]
+    selectedHighlightIndex++
+    if (highlights.length === selectedHighlightIndex) {
+      selectedHighlightIndex = 0
+    }
+    if (changeHighlightSelectionListener) {
+      changeHighlightSelectionListener({
+        previousHighlight: previousHighlight,
+        nextHighlight: highlights[selectedHighlightIndex],
+        total: highlights.length,
+        nextIndex: selectedHighlightIndex
+      })
+    }
+  }
+
+  function getSelectedHighlight(): HTMLElement {
+    return highlights[selectedHighlightIndex]
+  }
+
+  function onClear(listener: Store.ClearListener) {
+    clearListener = listener
+  }
+
+  function onChangeHighlightSelection(listener: Store.ChangeHighlightSelectionListener) {
+    changeHighlightSelectionListener = listener
+  }
+
+  return {
+    setSearchResult,
+    clear,
+    forwardSelectedHighlight,
+    getSelectedHighlight,
+    onClear,
+    onChangeHighlightSelection
+  }
 }
 
 export function createPageSearcher(rootDOM: Node): PageSearcher {
-  let matchedSentences: Node[] = []
-  let matchedTexts: Node[] = []
-  let resultIndex = 0
-  let changeHighlightListener: ChangeHighlightListener | null = null
+  let changeHighlightListener: PageSearcher.ChangeHighlightListener | null = null
+  const stateManager = createStateManager()
 
-  function scrollToElement(element: Element, offset: number = 100) {
-    const clientRect = element.getBoundingClientRect()
+  stateManager.onClear((highlights) => {
+    highlights.forEach((node) => {
+      const newNode = document.createTextNode(node.textContent)
+      node.parentNode.replaceChild(newNode, node)
+    })
+  })
+
+  stateManager.onChangeHighlightSelection(({
+    previousHighlight,
+    nextHighlight,
+    total,
+    nextIndex
+  }) => {
+    previousHighlight.style.backgroundColor = '#ffff00'
+    nextHighlight.style.backgroundColor = '#ff8000'
+
+    const offset = -150
+    const clientRect = nextHighlight.getBoundingClientRect()
     const y = window.pageYOffset + clientRect.top + offset
     scrollTo(0, y)
-  }
+
+    if (changeHighlightListener) {
+      changeHighlightListener(total, nextIndex + 1)
+    }
+  })
 
   function _searchRecursively(dom: Node, query: string): Node[] {
     let matchedNodes: Node[] = []
@@ -35,64 +142,39 @@ export function createPageSearcher(rootDOM: Node): PageSearcher {
   }
 
   function search(query: string) {
-    const matchedNodes = _searchRecursively(rootDOM, query)
+    stateManager.clear()
 
-    matchedSentences.forEach((node) => {
-      const newNode = document.createTextNode(node.textContent)
-      node.parentNode.replaceChild(newNode, node)
-    })
+    const matchedTextNodes = _searchRecursively(rootDOM, query)
 
-    const newNodes: Node[] = []
-    matchedNodes.forEach((node) => {
+    let highlightGroups: HTMLElement[] = []
+    let highlights: HTMLElement[] = []
+    const matchedTextClass = 'ps-matched-text'
+    matchedTextNodes.forEach((node) => {
       const text = node.nodeValue
-      const t = text.replace(new RegExp(query, 'g'), `<span class="ps-matched-text" style="background-color: #ffff00;">$&</span>`)
+      const rawHighlightGroup = text.replace(new RegExp(query, 'g'), `<span class="${matchedTextClass}">$&</span>`)
 
-      const newNode = document.createElement('span')
-      newNode.innerHTML = t
-      newNode.classList.add('ps-matched-sentence')
+      const highlightGroup = document.createElement('span')
+      highlightGroup.innerHTML = rawHighlightGroup
+      const groupHighlights = highlightGroup.querySelectorAll<HTMLElement>(`span.${matchedTextClass}`)
 
-      newNodes.push(newNode)
+      highlightGroups.push(highlightGroup)
+      highlights = [...highlights, ...groupHighlights]
 
-      node.parentNode.replaceChild(newNode, node)
+      node.parentNode.replaceChild(highlightGroup, node)
     })
 
-    matchedSentences = newNodes
-    matchedTexts = Array.from(document.querySelectorAll('span.ps-matched-text'))
-    resultIndex = 0;
-    (matchedTexts[resultIndex] as HTMLElement).style.backgroundColor = '#ff8000'
-    scrollToElement(matchedTexts[resultIndex] as Element, -150)
-    if (changeHighlightListener) {
-      changeHighlightListener(matchedTexts.length, resultIndex + 1)
-    }
+    stateManager.setSearchResult(highlightGroups, highlights);
   }
 
   function nextResult() {
-    (matchedTexts[resultIndex] as HTMLElement).style.backgroundColor = '#ffff00'
-    resultIndex++
-    if (matchedTexts.length === resultIndex) {
-      resultIndex = 0
-    }
-    (matchedTexts[resultIndex] as HTMLElement).style.backgroundColor = '#ff8000'
-    scrollToElement(matchedTexts[resultIndex] as Element, -150)
-    if (changeHighlightListener) {
-      changeHighlightListener(matchedTexts.length, resultIndex + 1)
-    }
+    stateManager.forwardSelectedHighlight()
   }
 
   function clear() {
-    matchedSentences.forEach((node) => {
-      const newNode = document.createTextNode(node.textContent)
-      node.parentNode.replaceChild(newNode, node)
-    })
-    matchedSentences = []
-    matchedTexts = []
-    resultIndex = 0
-    if (changeHighlightListener) {
-      changeHighlightListener(matchedTexts.length, resultIndex + 1)
-    }
+    stateManager.clear()
   }
 
-  function addChangeHighlightListener(listener: ChangeHighlightListener) {
+  function addChangeHighlightListener(listener: PageSearcher.ChangeHighlightListener) {
     changeHighlightListener = listener
     return () => {
       changeHighlightListener = null
