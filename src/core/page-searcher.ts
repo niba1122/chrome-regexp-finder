@@ -47,7 +47,7 @@ function createStore(): Store {
         previousHighlight: previousHighlight,
         nextHighlight: highlights[selectedHighlightIndex],
         total: highlights.length,
-        nextIndex: selectedHighlightIndex
+        nextIndex: highlights.length > 0 ? selectedHighlightIndex : undefined
       })
     }
   }
@@ -62,8 +62,8 @@ function createStore(): Store {
   }
 
   function forwardSelectedHighlight() {
+    if (!highlights.length) { return }
     const previousHighlight = highlights[selectedHighlightIndex]
-    if (!previousHighlight) { return }
     selectedHighlightIndex++
     if (highlights.length === selectedHighlightIndex) {
       selectedHighlightIndex = 0
@@ -153,6 +153,7 @@ export function createPageSearcher(rootDOM: Node): PageSearcher {
   }
 
   function search(query: string) {
+    if (query === '') { return }
     store.clear()
 
     const queryRegExp = new RegExp(query, 'gi')
