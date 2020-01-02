@@ -141,6 +141,10 @@ export function createPageSearcher(rootDOM: Node): PageSearcher {
     return matchedNodes
   }
 
+  function htmlElementIsVisible(element: HTMLElement): boolean {
+    return !!element.offsetParent && !element.hidden
+  }
+
   function search(query: string) {
     stateManager.clear()
 
@@ -156,12 +160,16 @@ export function createPageSearcher(rootDOM: Node): PageSearcher {
 
       const highlightGroup = document.createElement('span')
       highlightGroup.innerHTML = rawHighlightGroup
-      const groupHighlights = highlightGroup.querySelectorAll<HTMLElement>(`span.${matchedTextClass}`)
-
-      highlightGroups.push(highlightGroup)
-      highlights = [...highlights, ...groupHighlights]
 
       node.parentNode.replaceChild(highlightGroup, node)
+      highlightGroups.push(highlightGroup)
+
+      const groupHighlights = Array.prototype.filter.call(
+        highlightGroup.querySelectorAll<HTMLElement>(`span.${matchedTextClass}`),
+        htmlElementIsVisible
+      )
+
+      highlights = [...highlights, ...groupHighlights]
     })
 
     stateManager.setSearchResult(highlightGroups, highlights);
