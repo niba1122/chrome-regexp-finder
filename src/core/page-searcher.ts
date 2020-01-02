@@ -62,7 +62,7 @@ export function createPageSearcher(rootDOM: Node): PageSearcher {
     (matchedTexts[resultIndex] as HTMLElement).style.backgroundColor = '#ff8000'
     scrollToElement(matchedTexts[resultIndex] as Element, -150)
     if (changeHighlightListener) {
-      changeHighlightListener(matchedTexts.length, resultIndex)
+      changeHighlightListener(matchedTexts.length, resultIndex + 1)
     }
   }
 
@@ -75,7 +75,7 @@ export function createPageSearcher(rootDOM: Node): PageSearcher {
     (matchedTexts[resultIndex] as HTMLElement).style.backgroundColor = '#ff8000'
     scrollToElement(matchedTexts[resultIndex] as Element, -150)
     if (changeHighlightListener) {
-      changeHighlightListener(matchedTexts.length, resultIndex)
+      changeHighlightListener(matchedTexts.length, resultIndex + 1)
     }
   }
 
@@ -88,7 +88,7 @@ export function createPageSearcher(rootDOM: Node): PageSearcher {
     matchedTexts = []
     resultIndex = 0
     if (changeHighlightListener) {
-      changeHighlightListener(matchedTexts.length, resultIndex)
+      changeHighlightListener(matchedTexts.length, resultIndex + 1)
     }
   }
 
