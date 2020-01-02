@@ -29,7 +29,7 @@ namespace Store {
   }) => void
 }
 
-function createStateManager(): Store {
+function createStore(): Store {
   let highlightGroups: HTMLElement[] = []
   let highlights: HTMLElement[] = []
   let selectedHighlightIndex = 0
@@ -99,16 +99,16 @@ function createStateManager(): Store {
 
 export function createPageSearcher(rootDOM: Node): PageSearcher {
   let changeHighlightListener: PageSearcher.ChangeHighlightListener | null = null
-  const stateManager = createStateManager()
+  const store = createStore()
 
-  stateManager.onClear((highlights) => {
+  store.onClear((highlights) => {
     highlights.forEach((node) => {
       const newNode = document.createTextNode(node.textContent)
       node.parentNode.replaceChild(newNode, node)
     })
   })
 
-  stateManager.onChangeHighlightSelection(({
+  store.onChangeHighlightSelection(({
     previousHighlight,
     nextHighlight,
     total,
@@ -146,7 +146,7 @@ export function createPageSearcher(rootDOM: Node): PageSearcher {
   }
 
   function search(query: string) {
-    stateManager.clear()
+    store.clear()
 
     const queryRegExp = new RegExp(query, 'gi')
     const matchedTextNodes = _searchRecursively(rootDOM, queryRegExp)
@@ -172,15 +172,15 @@ export function createPageSearcher(rootDOM: Node): PageSearcher {
       highlights = [...highlights, ...groupHighlights]
     })
 
-    stateManager.setSearchResult(highlightGroups, highlights);
+    store.setSearchResult(highlightGroups, highlights);
   }
 
   function nextResult() {
-    stateManager.forwardSelectedHighlight()
+    store.forwardSelectedHighlight()
   }
 
   function clear() {
-    stateManager.clear()
+    store.clear()
   }
 
   function addChangeHighlightListener(listener: PageSearcher.ChangeHighlightListener) {
