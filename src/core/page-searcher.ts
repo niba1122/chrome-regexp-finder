@@ -127,7 +127,7 @@ export function createPageSearcher(rootDOM: Node): PageSearcher {
     }
   })
 
-  function _searchRecursively(dom: Node, query: string): Node[] {
+  function _searchRecursively(dom: Node, query: RegExp): Node[] {
     let matchedNodes: Node[] = []
     dom.childNodes.forEach((node) => {
       if (node.nodeType === Node.TEXT_NODE) {
@@ -144,14 +144,15 @@ export function createPageSearcher(rootDOM: Node): PageSearcher {
   function search(query: string) {
     stateManager.clear()
 
-    const matchedTextNodes = _searchRecursively(rootDOM, query)
+    const queryRegExp = new RegExp(query, 'gi')
+    const matchedTextNodes = _searchRecursively(rootDOM, queryRegExp)
 
     let highlightGroups: HTMLElement[] = []
     let highlights: HTMLElement[] = []
     const matchedTextClass = 'ps-matched-text'
     matchedTextNodes.forEach((node) => {
       const text = node.nodeValue
-      const rawHighlightGroup = text.replace(new RegExp(query, 'g'), `<span class="${matchedTextClass}">$&</span>`)
+      const rawHighlightGroup = text.replace(queryRegExp, `<span class="${matchedTextClass}" style="background-color: #ffff00;">$&</span>`)
 
       const highlightGroup = document.createElement('span')
       highlightGroup.innerHTML = rawHighlightGroup
