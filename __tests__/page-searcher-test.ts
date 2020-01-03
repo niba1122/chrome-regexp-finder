@@ -73,15 +73,15 @@ test('forward result back to first', (done) => {
   pageSearcher.nextResult()
 })
 
-// test('clear result', (done) => {
-//   pageSearcher.search('tempor')
-//   pageSearcher.addChangeHighlightListener((total, current) => {
-//     expect(total).toBe(0)
-//     expect(current).toBe(undefined)
-//     done()
-//   })
-//   pageSearcher.clear()
-// })
+test('clear result', (done) => {
+  pageSearcher.search('tempor')
+  pageSearcher.addChangeHighlightListener((total, current) => {
+    expect(total).toBe(0)
+    expect(current).toBe(undefined)
+    done()
+  })
+  pageSearcher.clear()
+})
 
 test('search 2 times', (done) => {
   pageSearcher.search('tempor')
@@ -91,4 +91,14 @@ test('search 2 times', (done) => {
     done()
   })
   pageSearcher.search('quis')
+})
+
+test('clear result if search by empty text', (done) => {
+  pageSearcher.search('tempor')
+  pageSearcher.addChangeHighlightListener((total, current) => {
+    expect(total).toBe(0)
+    expect(current).toBe(undefined)
+    done()
+  })
+  pageSearcher.search('')
 })

@@ -41,10 +41,8 @@ function createStore(): Store {
     highlightGroups = hg
     highlights = h
     selectedHighlightIndex = 0
-    const previousHighlight = highlights[selectedHighlightIndex]
     if (changeHighlightSelectionListener) {
       changeHighlightSelectionListener({
-        previousHighlight: previousHighlight,
         nextHighlight: highlights[selectedHighlightIndex],
         total: highlights.length,
         nextIndex: highlights.length > 0 ? selectedHighlightIndex : undefined
@@ -56,9 +54,16 @@ function createStore(): Store {
     if (clearListener) {
       clearListener(highlightGroups)
     }
+    const previousHighlight = highlights[selectedHighlightIndex]
     highlightGroups = []
     highlights = []
     selectedHighlightIndex = 0
+    if (changeHighlightSelectionListener) {
+      changeHighlightSelectionListener({
+        previousHighlight: previousHighlight,
+        total: highlights.length,
+      })
+    }
   }
 
   function forwardSelectedHighlight() {
@@ -153,8 +158,10 @@ export function createPageSearcher(rootDOM: Node): PageSearcher {
   }
 
   function search(query: string) {
-    if (query === '') { return }
-    store.clear()
+    if (query === '') {
+      clear()
+      return
+    }
 
     const queryRegExp = new RegExp(query, 'gi')
     const matchedTextNodes = _searchRecursively(rootDOM, queryRegExp)
