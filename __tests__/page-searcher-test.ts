@@ -1,14 +1,16 @@
-import { createPageSearcher } from "../src/core/page-searcher";
+import { createPageSearcher, PageSearcher } from "../src/core/page-searcher";
 
+function setupPolyfill() {
+  // https://github.com/jsdom/jsdom/issues/1261#issuecomment-362928131
+  Object.defineProperty(HTMLElement.prototype, 'offsetParent', {
+    get() { return this.parentNode; },
+  });
 
-// https://github.com/jsdom/jsdom/issues/1261#issuecomment-362928131
-Object.defineProperty(HTMLElement.prototype, 'offsetParent', {
-  get() { return this.parentNode; },
-});
+  window.scrollTo = jest.fn()
 
-window.scrollTo = jest.fn()
+}
 
-function setup() {
+function setupEachTest() {
   const rootDOM = document.createElement('body')
   rootDOM.innerHTML = `
 <h1>Test DOMs</h1>
@@ -21,9 +23,17 @@ function setup() {
   return pageSearcher
 }
 
-test('search', (done) => {
-  const pageSearcher = setup()
+let pageSearcher!: PageSearcher
 
+beforeAll(() => {
+  setupPolyfill()
+})
+
+beforeEach(() => {
+  pageSearcher = setupEachTest()
+})
+
+test('search', (done) => {
   pageSearcher.addChangeHighlightListener((total, _current) => {
     expect(total).toBe(3)
     done()
