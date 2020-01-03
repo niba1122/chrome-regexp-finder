@@ -1,4 +1,4 @@
-interface PageSearcher {
+export interface PageSearcher {
   search: (query: string) => void
   nextResult: () => void
   clear: () => void
