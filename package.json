@@ -5,7 +5,8 @@
   "private": true,
   "scripts": {
     "watch": "webpack --mode=development --watch --config config/webpack.config.js",
-    "build": "webpack --mode=production --config config/webpack.config.js"
+    "build": "webpack --mode=production --config config/webpack.config.js",
+    "test": "jest"
   },
   "devDependencies": {
     "@types/chrome": "0.0.91",
