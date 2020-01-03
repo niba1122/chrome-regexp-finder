@@ -34,9 +34,61 @@ beforeEach(() => {
 })
 
 test('search', (done) => {
-  pageSearcher.addChangeHighlightListener((total, _current) => {
+  pageSearcher.addChangeHighlightListener((total, current) => {
     expect(total).toBe(3)
+    expect(current).toBe(0)
     done()
   })
   pageSearcher.search('tempor')
+})
+
+test('no matched text', (done) => {
+  pageSearcher.addChangeHighlightListener((total, current) => {
+    expect(total).toBe(0)
+    expect(current).toBe(undefined)
+    done()
+  })
+  pageSearcher.search('asdfasdf')
+})
+
+test('forward result', (done) => {
+  pageSearcher.search('tempor')
+  pageSearcher.addChangeHighlightListener((total, current) => {
+    expect(total).toBe(3)
+    expect(current).toBe(1)
+    done()
+  })
+  pageSearcher.nextResult()
+})
+
+test('forward result back to first', (done) => {
+  pageSearcher.search('tempor')
+  pageSearcher.nextResult()
+  pageSearcher.nextResult()
+  pageSearcher.addChangeHighlightListener((total, current) => {
+    expect(total).toBe(3)
+    expect(current).toBe(0)
+    done()
+  })
+  pageSearcher.nextResult()
+})
+
+// test('clear result', (done) => {
+//   pageSearcher.search('tempor')
+//   pageSearcher.addChangeHighlightListener((total, current) => {
+//     expect(total).toBe(0)
+//     expect(current).toBe(undefined)
+//     done()
+//   })
+//   pageSearcher.clear()
+// })
+
+test('search 2 times', (done) => {
+  pageSearcher.search('tempor')
+  pageSearcher.addChangeHighlightListener((total, current) => {
+    expect(total).toBe(4)
+    expect(current).toBe(0)
+    done()
+  })
+  pageSearcher.search('quis')
 })
