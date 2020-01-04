@@ -6,6 +6,7 @@ interface Message {
 export enum MessageType {
   Search = 'SEARCH',
   NextResult = 'NEXT_RESULT',
+  PreviousResult = 'PREVIOUS_RESULT',
   ClearResult = 'CLEAR_RESULT',
   ChangeHighlight = 'CHANGE_HIGHLIGHT'
 }
@@ -27,6 +28,14 @@ export interface NextResult extends Message {
 
 export function isNextResult(message: Message): message is NextResult {
   return message.type === MessageType.NextResult
+}
+
+export interface PreviousResult extends Message {
+  type: MessageType.PreviousResult,
+}
+
+export function isPreviousResult(message: Message): message is NextResult {
+  return message.type === MessageType.PreviousResult
 }
 
 export interface ClearResult extends Message {

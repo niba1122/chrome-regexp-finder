@@ -1,12 +1,14 @@
 'use strict';
 
 import './popup.css';
-import { Search, MessageType, NextResult, ClearResult, isChangeHighlight } from './message-type';
+import { Search, MessageType, NextResult, ClearResult, isChangeHighlight, PreviousResult } from './message-type';
 
 const searchFormDOM = document.getElementById('search-form') as HTMLFormElement
 const searchFormTextDOM = document.getElementById('search-form-text') as HTMLInputElement
 const searchResultTotalDOM = document.getElementById('search-result-total') as HTMLElement
 const searchResultCurrentDOM = document.getElementById('search-result-current') as HTMLElement
+const nextButtonDOM =  document.getElementById('forward-button') as HTMLElement
+const previousButtonDOM = document.getElementById('backward-button') as HTMLElement
 
 let previousQuery = ''
 
@@ -50,6 +52,40 @@ searchFormDOM.addEventListener('submit', (e) => {
     });
   }
   previousQuery = query
+})
+
+nextButtonDOM.addEventListener('click', () => {
+  const message: NextResult = {
+    type: MessageType.NextResult,
+    payload: undefined
+  }
+
+  chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
+    const tab = tabs[0];
+    if (tab.id) {
+      chrome.tabs.sendMessage(
+        tab.id,
+        message
+      );
+    }
+  });
+})
+
+previousButtonDOM.addEventListener('click', () => {
+  const message: PreviousResult = {
+    type: MessageType.PreviousResult,
+    payload: undefined
+  }
+
+  chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
+    const tab = tabs[0];
+    if (tab.id) {
+      chrome.tabs.sendMessage(
+        tab.id,
+        message
+      );
+    }
+  });
 })
 
 addEventListener('unload', (_event) => {

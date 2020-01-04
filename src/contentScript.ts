@@ -1,4 +1,4 @@
-import { isSearch, isNextResult, isClearResult, ChangeHighlight, MessageType } from "./message-type"
+import { isSearch, isNextResult, isClearResult, ChangeHighlight, MessageType, isPreviousResult } from "./message-type"
 import { createPageSearcher } from "./core/page-searcher";
 
 function initialize() {
@@ -20,6 +20,8 @@ function initialize() {
       pageSearcher.search(request.payload.query)
     } else if (isNextResult(request)) {
       pageSearcher.nextResult()
+    } else if (isPreviousResult(request)) {
+      pageSearcher.previousResult()
     } else if (isClearResult(request)) {
       pageSearcher.clear()
     }
