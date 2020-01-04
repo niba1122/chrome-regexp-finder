@@ -73,6 +73,27 @@ test('forward result back to first', (done) => {
   pageSearcher.nextResult()
 })
 
+test('backward result', (done) => {
+  pageSearcher.search('tempor')
+  pageSearcher.previousResult()
+  pageSearcher.addChangeHighlightListener((total, current) => {
+    expect(total).toBe(3)
+    expect(current).toBe(1)
+    done()
+  })
+  pageSearcher.previousResult()
+})
+
+test('backward result back to last', (done) => {
+  pageSearcher.search('tempor')
+  pageSearcher.addChangeHighlightListener((total, current) => {
+    expect(total).toBe(3)
+    expect(current).toBe(2)
+    done()
+  })
+  pageSearcher.previousResult()
+})
+
 test('clear result', (done) => {
   pageSearcher.search('tempor')
   pageSearcher.addChangeHighlightListener((total, current) => {

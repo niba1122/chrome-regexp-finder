@@ -1,6 +1,7 @@
 export interface PageSearcher {
   search: (query: string) => void
   nextResult: () => void
+  previousResult: () => void
   clear: () => void
   addChangeHighlightListener: (listener: PageSearcher.ChangeHighlightListener) => PageSearcher.Unsubscriber
 }
@@ -14,6 +15,7 @@ interface Store {
   setSearchResult(highlightGroups: HTMLElement[], highlights: HTMLElement[]): void
   clear(): void
   forwardSelectedHighlight(): void
+  backwardSelectedHighlight(): void
   getSelectedHighlight(): HTMLElement
   onClear(listener: Store.ClearListener): void
   onChangeHighlightSelection(listener: Store.ChangeHighlightSelectionListener): void
@@ -83,6 +85,23 @@ function createStore(): Store {
     }
   }
 
+  function backwardSelectedHighlight() {
+    if (!highlights.length) { return }
+    const previousHighlight = highlights[selectedHighlightIndex]
+    if (selectedHighlightIndex === 0) {
+      selectedHighlightIndex = highlights.length
+    }
+    selectedHighlightIndex--
+    if (changeHighlightSelectionListener) {
+      changeHighlightSelectionListener({
+        previousHighlight: previousHighlight,
+        nextHighlight: highlights[selectedHighlightIndex],
+        total: highlights.length,
+        nextIndex: selectedHighlightIndex
+      })
+    }
+  }
+
   function getSelectedHighlight(): HTMLElement {
     return highlights[selectedHighlightIndex]
   }
@@ -99,6 +118,7 @@ function createStore(): Store {
     setSearchResult,
     clear,
     forwardSelectedHighlight,
+    backwardSelectedHighlight,
     getSelectedHighlight,
     onClear,
     onChangeHighlightSelection
@@ -194,6 +214,10 @@ export function createPageSearcher(rootDOM: Node): PageSearcher {
     store.forwardSelectedHighlight()
   }
 
+  function previousResult() {
+    store.backwardSelectedHighlight()
+  }
+
   function clear() {
     store.clear()
   }
@@ -208,6 +232,7 @@ export function createPageSearcher(rootDOM: Node): PageSearcher {
   return {
     search,
     nextResult,
+    previousResult,
     clear,
     addChangeHighlightListener
   }
