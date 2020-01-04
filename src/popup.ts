@@ -11,6 +11,7 @@ const nextButtonDOM =  document.getElementById('forward-button') as HTMLElement
 const previousButtonDOM = document.getElementById('backward-button') as HTMLElement
 
 let previousQuery = ''
+let shiftKeyIsPressed = false
 
 searchFormTextDOM.focus()
 
@@ -18,9 +19,24 @@ searchFormDOM.addEventListener('submit', (e) => {
   e.preventDefault()
   const query = searchFormTextDOM.value
 
-  if (query === previousQuery) {
+  if (query === previousQuery && !shiftKeyIsPressed) {
     const message: NextResult = {
       type: MessageType.NextResult,
+      payload: undefined
+    }
+
+    chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
+      const tab = tabs[0];
+      if (tab.id) {
+        chrome.tabs.sendMessage(
+          tab.id,
+          message
+        );
+      }
+    });
+  } else if (query === previousQuery && shiftKeyIsPressed) {
+    const message: PreviousResult = {
+      type: MessageType.PreviousResult,
       payload: undefined
     }
 
@@ -86,6 +102,18 @@ previousButtonDOM.addEventListener('click', () => {
       );
     }
   });
+})
+
+addEventListener('keydown', (event) => {
+  if (event.shiftKey) {
+    shiftKeyIsPressed = true
+  }
+})
+
+addEventListener('keyup', (event) => {
+  if (event.shiftKey) {
+    shiftKeyIsPressed = false
+  }
 })
 
 addEventListener('unload', (_event) => {
