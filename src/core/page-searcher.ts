@@ -40,6 +40,9 @@ function createStore(): Store {
   let changeHighlightSelectionListener: Store.ChangeHighlightSelectionListener | null = null
 
   function setSearchResult(hg: HTMLElement[], h: HTMLElement[]) {
+    if (clearListener) {
+      clearListener(highlightGroups)
+    }
     highlightGroups = hg
     highlights = h
     selectedHighlightIndex = 0

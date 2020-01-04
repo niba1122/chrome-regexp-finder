@@ -42,7 +42,7 @@ test('search', (done) => {
   pageSearcher.search('tempor')
 })
 
-test('no matched text', (done) => {
+test('no results', (done) => {
   pageSearcher.addChangeHighlightListener((total, current) => {
     expect(total).toBe(0)
     expect(current).toBe(undefined)
