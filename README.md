@@ -1,6 +1,6 @@
-# <img src="public/icons/icon_48.png" width="45" align="left"> Page Searcher
+# <img src="public/icons/icon_128.png" width="45" align="left"> RegExp Finder
 
-My Chrome Extension
+RegExp Finder
 
 ## Features
 
