@@ -5,13 +5,87 @@
 
 
 body {
-  width: 300px;
   padding: 20px;
 }
 
-.search-form-text {
+.query-text {
+  display: inline-block;
+  box-sizing: border-box;
+  position: relative;
+  padding: 0px 10px;
+  height: 24px;
+  color: #006600;
+  font-size: 16px;
+  font-weight: bold;
+}
+.query-text:before {
+  content: '/';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  line-height: 24px;
+  font-size: 16px;
+}
+.query-text:after {
+  content: '/g';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  line-height: 24px;
+}
+.query-text__input {
+  margin: auto 5px;
+  vertical-align: middle;
+  border: none;
+  outline: none;
+  font-size: 1em;
+}
+.query-text__input::placeholder {
+  color: #ccc;
 }
 
-.search-form-submit-button {
+.button {
+  display: inline-block;
+  vertical-align: bottom;
+  position: relative;
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+  padding: 4px;
+}
+.button:active:after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: rgba(0, 0, 0, 0.3);
+}
+.button__image {
+  width: 16px;
+  height: 16px;
 }
 
+.search-form {
+  display: flex;
+  width: 400px;
+}
+.search-form__text {
+  flex: auto;
+}
+.search-form__text .query-text {
+  width: 100%;
+}
+.search-form__search-button, .search-form__backward-button, .search-form__forward-button {
+  flex: initial;
+}
+.search-form__count {
+  flex: initial;
+  width: 80px;
+  font-size: 14px;
+  text-align: center;
+  line-height: 24px;
+}
