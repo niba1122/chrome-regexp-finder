@@ -6,16 +6,32 @@
 <link rel="stylesheet" href="popup.css" />
 </head>
 <body>
-<div class="app">
-  <form class="search-form" id="search-form">
-    /<input class="search-form-text" type="text" id="search-form-text" />/
-    <input class="search-form-submit-button" type="submit" value="search" />
+<div class="search-form">
+  <div class="search-form__text">
+    <span class="query-text">
+      <input class="query-text__input" type="text" id="search-form-text" placeholder="[a-z]+.*\w" />
+    </span>
+  </div>
+  <div class="search-form__count" id="search-result-count">
     <span id="search-result-current">0</span>
     /
     <span id="search-result-total">0</span>
-    <input type="button" value="↑" id="backward-button" />
-    <input type="button" value="↓" id="forward-button" />
-  </form>
+  </div>
+  <div class="search-form__search-button">
+    <span class="button" id="search-button">
+      <img class="button__image" src="images/search.svg" alt="forward" />
+    </span>
+  </div>
+  <div class="search-form__backward-button" id="backward-button">
+    <span class="button">
+      <img class="button__image" src="images/backward.svg" alt="backward" />
+    </span>
+  </div>
+  <div class="search-form__forward-button" id="forward-button">
+    <span class="button">
+      <img class="button__image" src="images/forward.svg" />
+    </span>
+  </div>
 </div>
 <script src="popup.js"></script>
 </body>
