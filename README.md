@@ -4,14 +4,11 @@ RegExp Finder
 
 ## Features
 
-- Feature 1
-- Feature 2
+Using RegExp Finder, you can search words in a web page with regular expression.
 
 ## Install
 
 [**Chrome** extension]() <!-- TODO: Add chrome extension link inside parenthesis -->
 
-## Contribution
-
-Suggestions and pull requests are welcomed!.
+* Set shortcut [here](chrome://extensions/shortcuts)
 
