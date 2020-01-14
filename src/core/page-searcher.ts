@@ -30,11 +30,11 @@ namespace Store {
 }
 
 export interface PageSearcher {
-  search: (query: string) => void
-  nextResult: () => void
-  previousResult: () => void
-  clear: () => void
-  addChangeHighlightListener: (listener: PageSearcher.ChangeHighlightListener) => PageSearcher.Unsubscriber
+  search(query: string): void
+  nextResult(): void
+  previousResult(): void
+  clear(): void
+  addChangeHighlightListener(listener: PageSearcher.ChangeHighlightListener): PageSearcher.Unsubscriber
 }
 
 namespace PageSearcher {
