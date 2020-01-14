@@ -44,6 +44,8 @@ namespace PageSearcher {
 
 
 function createHighlightGroup(node: Node, queryRegExp: RegExp): HighlightGroup {
+  const highlightColor = '#ffff00'
+  const selectedHighlightColor = '#ff8000'
 
   function htmlElementIsVisible(element: HTMLElement): boolean {
     return !!element.offsetParent && !element.hidden
@@ -51,7 +53,7 @@ function createHighlightGroup(node: Node, queryRegExp: RegExp): HighlightGroup {
 
   function createHighlight(dom: HTMLElement): Highlight {
     function select() {
-      dom.style.backgroundColor = '#ff8000'
+      dom.style.backgroundColor = selectedHighlightColor
 
       const offset = -150
       const clientRect = dom.getBoundingClientRect()
@@ -59,7 +61,7 @@ function createHighlightGroup(node: Node, queryRegExp: RegExp): HighlightGroup {
       scrollTo(0, y)
     }
     function unselect() {
-      dom.style.backgroundColor = '#ffff00'
+      dom.style.backgroundColor = highlightColor
     }
     return {
       select,
@@ -69,7 +71,7 @@ function createHighlightGroup(node: Node, queryRegExp: RegExp): HighlightGroup {
 
   const matchedTextClass = 'ps-matched-text'
   const text = node.nodeValue
-  const rawHighlightGroup = text?.replace(queryRegExp, `<span class="${matchedTextClass}" style="background-color: #ffff00;">$&</span>`)
+  const rawHighlightGroup = text?.replace(queryRegExp, `<span class="${matchedTextClass}" style="background-color: ${highlightColor};">$&</span>`)
 
   const highlightGroupDOM = document.createElement('span')
   highlightGroupDOM.innerHTML = rawHighlightGroup || ''
