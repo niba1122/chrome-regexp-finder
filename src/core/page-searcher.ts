@@ -1,3 +1,34 @@
+interface HighlightGroup {
+  getGroupHighlights(): Highlight[]
+  clear(): void
+}
+
+interface Highlight {
+  select(): void
+  unselect(): void
+}
+
+interface Store {
+  setSearchResult(highlightGroups: HighlightGroup[], highlights: Highlight[]): void
+  clear(): void
+  isCleared(): boolean
+  forwardSelectedHighlight(): void
+  backwardSelectedHighlight(): void
+  getSelectedHighlight(): Highlight
+  onClear(listener: Store.ClearListener): void
+  onChangeHighlightSelection(listener: Store.ChangeHighlightSelectionListener): void
+}
+
+namespace Store {
+  export type ClearListener = (highlightGroups: HighlightGroup[]) => void
+  export type ChangeHighlightSelectionListener = (args: {
+    previousHighlight?: Highlight,
+    nextHighlight?: Highlight,
+    total: number,
+    nextIndex?: number
+  }) => void
+}
+
 export interface PageSearcher {
   search: (query: string) => void
   nextResult: () => void
@@ -11,36 +42,69 @@ namespace PageSearcher {
   export type Unsubscriber = () => void
 }
 
-interface Store {
-  setSearchResult(highlightGroups: HTMLElement[], highlights: HTMLElement[]): void
-  clear(): void
-  isCleared(): boolean
-  forwardSelectedHighlight(): void
-  backwardSelectedHighlight(): void
-  getSelectedHighlight(): HTMLElement
-  onClear(listener: Store.ClearListener): void
-  onChangeHighlightSelection(listener: Store.ChangeHighlightSelectionListener): void
-}
 
-namespace Store {
-  export type ClearListener = (highlightGroups: Node[]) => void
-  export type ChangeHighlightSelectionListener = (args: {
-    previousHighlight?: HTMLElement,
-    nextHighlight?: HTMLElement,
-    total: number,
-    nextIndex?: number
-  }) => void
+function createHighlightGroup(node: Node, queryRegExp: RegExp): HighlightGroup {
+
+  function htmlElementIsVisible(element: HTMLElement): boolean {
+    return !!element.offsetParent && !element.hidden
+  }
+
+  function createHighlight(dom: HTMLElement): Highlight {
+    function select() {
+      dom.style.backgroundColor = '#ff8000'
+
+      const offset = -150
+      const clientRect = dom.getBoundingClientRect()
+      const y = window.pageYOffset + clientRect.top + offset
+      scrollTo(0, y)
+    }
+    function unselect() {
+      dom.style.backgroundColor = '#ffff00'
+    }
+    return {
+      select,
+      unselect
+    }
+  }
+
+  const matchedTextClass = 'ps-matched-text'
+  const text = node.nodeValue
+  const rawHighlightGroup = text?.replace(queryRegExp, `<span class="${matchedTextClass}" style="background-color: #ffff00;">$&</span>`)
+
+  const highlightGroupDOM = document.createElement('span')
+  highlightGroupDOM.innerHTML = rawHighlightGroup || ''
+
+  node.parentNode?.replaceChild(highlightGroupDOM, node)
+
+  const groupHighlights = Array.prototype.filter.call(
+    highlightGroupDOM.querySelectorAll<HTMLElement>(`span.${matchedTextClass}`),
+    htmlElementIsVisible
+  ).map((dom: HTMLElement) => createHighlight(dom))
+
+  function getGroupHighlights(): Highlight[] {
+    return groupHighlights
+  }
+
+  function clear() {
+    const newNode = document.createTextNode(highlightGroupDOM.textContent || '')
+    highlightGroupDOM.parentNode?.replaceChild(newNode, highlightGroupDOM)
+  }
+
+  return {
+    getGroupHighlights,
+    clear
+  }
 }
 
 function createStore(): Store {
-  let highlightGroups: HTMLElement[] = []
-  let highlights: HTMLElement[] = []
+  let highlightGroups: HighlightGroup[] = []
+  let highlights: Highlight[] = []
   let selectedHighlightIndex = 0
 
   let clearListener: Store.ClearListener | null = null
   let changeHighlightSelectionListener: Store.ChangeHighlightSelectionListener | null = null
 
-  function setSearchResult(hg: HTMLElement[], h: HTMLElement[]) {
+  function setSearchResult(hg: HighlightGroup[], h: Highlight[]) {
     highlightGroups = hg
     highlights = h
     selectedHighlightIndex = 0
@@ -107,7 +171,7 @@ function createStore(): Store {
     }
   }
 
-  function getSelectedHighlight(): HTMLElement {
+  function getSelectedHighlight(): Highlight {
     return highlights[selectedHighlightIndex]
   }
 
@@ -135,10 +199,9 @@ export function createPageSearcher(rootDOM: Node): PageSearcher {
   let changeHighlightListener: PageSearcher.ChangeHighlightListener | null = null
   const store = createStore()
 
-  store.onClear((highlights) => {
-    highlights.forEach((node) => {
-      const newNode = document.createTextNode(node.textContent || '')
-      node.parentNode?.replaceChild(newNode, node)
+  store.onClear((highlightGroups) => {
+    highlightGroups.forEach((hg) => {
+      hg.clear()
     })
   })
 
@@ -149,15 +212,10 @@ export function createPageSearcher(rootDOM: Node): PageSearcher {
     nextIndex
   }) => {
     if (previousHighlight) {
-      previousHighlight.style.backgroundColor = '#ffff00'
+      previousHighlight.unselect()
     }
     if (nextHighlight) {
-      nextHighlight.style.backgroundColor = '#ff8000'
-
-      const offset = -150
-      const clientRect = nextHighlight.getBoundingClientRect()
-      const y = window.pageYOffset + clientRect.top + offset
-      scrollTo(0, y)
+      nextHighlight.select()
     }
 
     if (changeHighlightListener) {
@@ -179,10 +237,6 @@ export function createPageSearcher(rootDOM: Node): PageSearcher {
     return matchedNodes
   }
 
-  function htmlElementIsVisible(element: HTMLElement): boolean {
-    return !!element.offsetParent && !element.hidden
-  }
-
   function search(query: string) {
     if (query === '') {
       store.clear()
@@ -195,23 +249,12 @@ export function createPageSearcher(rootDOM: Node): PageSearcher {
     const queryRegExp = new RegExp(query, 'gi')
     const matchedTextNodes = _searchRecursively(rootDOM, queryRegExp)
 
-    let highlightGroups: HTMLElement[] = []
-    let highlights: HTMLElement[] = []
-    const matchedTextClass = 'ps-matched-text'
+    let highlightGroups: HighlightGroup[] = []
+    let highlights: Highlight[] = []
     matchedTextNodes.forEach((node) => {
-      const text = node.nodeValue
-      const rawHighlightGroup = text?.replace(queryRegExp, `<span class="${matchedTextClass}" style="background-color: #ffff00;">$&</span>`)
-
-      const highlightGroup = document.createElement('span')
-      highlightGroup.innerHTML = rawHighlightGroup || ''
-
-      node.parentNode?.replaceChild(highlightGroup, node)
+      const highlightGroup = createHighlightGroup(node, queryRegExp)
       highlightGroups.push(highlightGroup)
-
-      const groupHighlights = Array.prototype.filter.call(
-        highlightGroup.querySelectorAll<HTMLElement>(`span.${matchedTextClass}`),
-        htmlElementIsVisible
-      )
+      const groupHighlights = highlightGroup.getGroupHighlights()
 
       highlights = [...highlights, ...groupHighlights]
     })
