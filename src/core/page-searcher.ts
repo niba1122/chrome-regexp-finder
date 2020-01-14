@@ -14,6 +14,7 @@ namespace PageSearcher {
 interface Store {
   setSearchResult(highlightGroups: HTMLElement[], highlights: HTMLElement[]): void
   clear(): void
+  isCleared(): boolean
   forwardSelectedHighlight(): void
   backwardSelectedHighlight(): void
   getSelectedHighlight(): HTMLElement
@@ -40,9 +41,6 @@ function createStore(): Store {
   let changeHighlightSelectionListener: Store.ChangeHighlightSelectionListener | null = null
 
   function setSearchResult(hg: HTMLElement[], h: HTMLElement[]) {
-    if (clearListener) {
-      clearListener(highlightGroups)
-    }
     highlightGroups = hg
     highlights = h
     selectedHighlightIndex = 0
@@ -69,6 +67,10 @@ function createStore(): Store {
         total: highlights.length,
       })
     }
+  }
+
+  function isCleared(): boolean {
+    return highlightGroups.length === 0 && highlights.length === 0 && selectedHighlightIndex === 0
   }
 
   function forwardSelectedHighlight() {
@@ -120,6 +122,7 @@ function createStore(): Store {
   return {
     setSearchResult,
     clear,
+    isCleared,
     forwardSelectedHighlight,
     backwardSelectedHighlight,
     getSelectedHighlight,
@@ -182,8 +185,11 @@ export function createPageSearcher(rootDOM: Node): PageSearcher {
 
   function search(query: string) {
     if (query === '') {
-      clear()
+      store.clear()
       return
+    }
+    if (!store.isCleared()) {
+      store.clear()
     }
 
     const queryRegExp = new RegExp(query, 'gi')

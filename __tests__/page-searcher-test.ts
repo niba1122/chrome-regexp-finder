@@ -106,10 +106,17 @@ test('clear result', (done) => {
 
 test('search 2 times', (done) => {
   pageSearcher.search('tempor')
+  let step = 0
   pageSearcher.addChangeHighlightListener((total, current) => {
-    expect(total).toBe(4)
-    expect(current).toBe(0)
-    done()
+    step++
+    if (step === 1) { // clear
+      expect(total).toBe(0)
+      expect(current).toBe(undefined)
+    } else if (step === 2) {
+      expect(total).toBe(4)
+      expect(current).toBe(0) // 2nd result
+      done()
+    }
   })
   pageSearcher.search('quis')
 })
