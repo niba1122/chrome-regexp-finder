@@ -42,6 +42,15 @@ test('search', (done) => {
   pageSearcher.search('tempor')
 })
 
+test('search with regexp string', (done) => {
+  pageSearcher.addChangeHighlightListener((total, current) => {
+    expect(total).toBe(51)
+    expect(current).toBe(0)
+    done()
+  })
+  pageSearcher.search('l\\w+')
+})
+
 test('no results', (done) => {
   pageSearcher.addChangeHighlightListener((total, current) => {
     expect(total).toBe(0)
@@ -106,12 +115,36 @@ test('clear result', (done) => {
 
 test('search 2 times', (done) => {
   pageSearcher.search('tempor')
+  let step = 0
   pageSearcher.addChangeHighlightListener((total, current) => {
-    expect(total).toBe(4)
-    expect(current).toBe(0)
-    done()
+    step++
+    if (step === 1) { // clear
+      expect(total).toBe(0)
+      expect(current).toBe(undefined)
+    } else if (step === 2) {
+      expect(total).toBe(4)
+      expect(current).toBe(0) // 2nd result
+      done()
+    }
   })
   pageSearcher.search('quis')
+})
+
+test('another search with regexp string which matched wider', (done) => {
+  pageSearcher.search('l\\w+')
+  let step = 0
+  pageSearcher.addChangeHighlightListener((total, current) => {
+    step++
+    if (step === 1) { // clear
+      expect(total).toBe(0)
+      expect(current).toBe(undefined)
+    } else if (step === 2) {
+      expect(total).toBe(5)
+      expect(current).toBe(0) // another search
+      done()
+    }
+  })
+  pageSearcher.search('l\\w+\\.')
 })
 
 test('clear result if search by empty text', (done) => {
