@@ -1,4 +1,4 @@
-interface HighlightGroup2 {
+interface HighlightGroup {
   clear(): void
 }
 
@@ -8,7 +8,7 @@ interface Highlight {
 }
 
 interface Store {
-  setSearchResult(highlightGroups: HighlightGroup2[], highlights: Highlight[]): void
+  setSearchResult(highlightGroups: HighlightGroup[], highlights: Highlight[]): void
   clear(): void
   isCleared(): boolean
   forwardSelectedHighlight(): void
@@ -19,7 +19,7 @@ interface Store {
 }
 
 namespace Store {
-  export type ClearListener = (highlightGroups: HighlightGroup2[]) => void
+  export type ClearListener = (highlightGroups: HighlightGroup[]) => void
   export type ChangeHighlightSelectionListener = (args: {
     previousHighlight?: Highlight,
     nextHighlight?: Highlight,
@@ -41,7 +41,7 @@ namespace PageSearcher {
   export type Unsubscriber = () => void
 }
 
-function createHighlightGroup2(highlightGroupDOM: HTMLElement): HighlightGroup2 {
+function createHighlightGroup(highlightGroupDOM: HTMLElement): HighlightGroup {
   function clear() {
     const newNode = document.createTextNode(highlightGroupDOM.textContent || '')
     highlightGroupDOM.parentNode?.replaceChild(newNode, highlightGroupDOM)
@@ -82,14 +82,14 @@ function createHighlight2(doms: HTMLElement[]): Highlight {
 }
 
 function createStore(): Store {
-  let highlightGroups: HighlightGroup2[] = []
+  let highlightGroups: HighlightGroup[] = []
   let highlights: Highlight[] = []
   let selectedHighlightIndex = 0
 
   let clearListener: Store.ClearListener | null = null
   let changeHighlightSelectionListener: Store.ChangeHighlightSelectionListener | null = null
 
-  function setSearchResult(hg: HighlightGroup2[], h: Highlight[]) {
+  function setSearchResult(hg: HighlightGroup[], h: Highlight[]) {
     highlightGroups = hg
     highlights = h
     selectedHighlightIndex = 0
@@ -245,7 +245,7 @@ export function createPageSearcher(rootDOM: HTMLElement): PageSearcher {
     return [nodes, nodeTextStartIndices, textIndex]
   }
 
-  function search2(query: string) {
+  function search(query: string) {
     if (query === '') {
       store.clear()
       return
@@ -277,7 +277,7 @@ export function createPageSearcher(rootDOM: HTMLElement): PageSearcher {
 
     let [nodes, nodeTextStartIndices] = _getTextNodes(rootDOM)
 
-    let highlightGroups: HighlightGroup2[] = []
+    let highlightGroups: HighlightGroup[] = []
 
     for (let i = 0; i < nodes.length; i++) {
       const node = nodes[i]
@@ -316,7 +316,7 @@ export function createPageSearcher(rootDOM: HTMLElement): PageSearcher {
 
       node.parentNode?.replaceChild(highlightGroupDOM, node)
 
-      highlightGroups.push(createHighlightGroup2(highlightGroupDOM))
+      highlightGroups.push(createHighlightGroup(highlightGroupDOM))
     }
       
     let highlightDOMs: HTMLElement[][] = matchedTextStartIndices.map(() => [])
@@ -353,7 +353,7 @@ export function createPageSearcher(rootDOM: HTMLElement): PageSearcher {
   }
 
   return {
-    search: search2,
+    search,
     nextResult,
     previousResult,
     clear,
