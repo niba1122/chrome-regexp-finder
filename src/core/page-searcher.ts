@@ -324,7 +324,6 @@ export function createPageSearcher(rootDOM: HTMLElement): PageSearcher {
 
     const allText = rootDOM.textContent
     if (!allText) return
-    console.log(allText.length)
 
     let match 
     let matchedTexts = []
@@ -391,8 +390,6 @@ export function createPageSearcher(rootDOM: HTMLElement): PageSearcher {
     let highlights = highlightDOMs.filter((doms) => {
       return doms.every(htmlElementIsVisible)
     }).map((doms) => createHighlight2(doms))
-
-    console.log(highlightDOMs)
 
     store.setSearchResult(highlightGroups, highlights);
   }
