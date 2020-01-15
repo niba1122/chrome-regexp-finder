@@ -1,8 +1,3 @@
-interface HighlightGroup {
-  getGroupHighlights(): Highlight[]
-  clear(): void
-}
-
 interface HighlightGroup2 {
   clear(): void
 }
@@ -13,7 +8,7 @@ interface Highlight {
 }
 
 interface Store {
-  setSearchResult(highlightGroups: HighlightGroup[] | HighlightGroup2[], highlights: Highlight[]): void
+  setSearchResult(highlightGroups: HighlightGroup2[], highlights: Highlight[]): void
   clear(): void
   isCleared(): boolean
   forwardSelectedHighlight(): void
@@ -24,7 +19,7 @@ interface Store {
 }
 
 namespace Store {
-  export type ClearListener = (highlightGroups: HighlightGroup[]) => void
+  export type ClearListener = (highlightGroups: HighlightGroup2[]) => void
   export type ChangeHighlightSelectionListener = (args: {
     previousHighlight?: Highlight,
     nextHighlight?: Highlight,
@@ -44,62 +39,6 @@ export interface PageSearcher {
 namespace PageSearcher {
   export type ChangeHighlightListener = (total: number, current?: number) => void
   export type Unsubscriber = () => void
-}
-
-
-function createHighlightGroup(node: Node, queryRegExp: RegExp): HighlightGroup {
-  const highlightColor = '#ffff00'
-  const selectedHighlightColor = '#ff8000'
-
-  function htmlElementIsVisible(element: HTMLElement): boolean {
-    return !!element.offsetParent && !element.hidden
-  }
-
-  function createHighlight(dom: HTMLElement): Highlight {
-    function select() {
-      dom.style.backgroundColor = selectedHighlightColor
-
-      const offset = -150
-      const clientRect = dom.getBoundingClientRect()
-      const y = window.pageYOffset + clientRect.top + offset
-      scrollTo(0, y)
-    }
-    function unselect() {
-      dom.style.backgroundColor = highlightColor
-    }
-    return {
-      select,
-      unselect
-    }
-  }
-
-  const matchedTextClass = 'ps-matched-text'
-  const text = node.nodeValue
-  const rawHighlightGroup = text?.replace(queryRegExp, `<span class="${matchedTextClass}" style="background-color: ${highlightColor};">$&</span>`)
-
-  const highlightGroupDOM = document.createElement('span')
-  highlightGroupDOM.innerHTML = rawHighlightGroup || ''
-
-  node.parentNode?.replaceChild(highlightGroupDOM, node)
-
-  const groupHighlights = Array.prototype.filter.call(
-    highlightGroupDOM.querySelectorAll<HTMLElement>(`span.${matchedTextClass}`),
-    htmlElementIsVisible
-  ).map((dom: HTMLElement) => createHighlight(dom))
-
-  function getGroupHighlights(): Highlight[] {
-    return groupHighlights
-  }
-
-  function clear() {
-    const newNode = document.createTextNode(highlightGroupDOM.textContent || '')
-    highlightGroupDOM.parentNode?.replaceChild(newNode, highlightGroupDOM)
-  }
-
-  return {
-    getGroupHighlights,
-    clear
-  }
 }
 
 function createHighlightGroup2(highlightGroupDOM: HTMLElement): HighlightGroup2 {
@@ -143,14 +82,14 @@ function createHighlight2(doms: HTMLElement[]): Highlight {
 }
 
 function createStore(): Store {
-  let highlightGroups: HighlightGroup[] = []
+  let highlightGroups: HighlightGroup2[] = []
   let highlights: Highlight[] = []
   let selectedHighlightIndex = 0
 
   let clearListener: Store.ClearListener | null = null
   let changeHighlightSelectionListener: Store.ChangeHighlightSelectionListener | null = null
 
-  function setSearchResult(hg: HighlightGroup[], h: Highlight[]) {
+  function setSearchResult(hg: HighlightGroup2[], h: Highlight[]) {
     highlightGroups = hg
     highlights = h
     selectedHighlightIndex = 0
@@ -390,31 +329,6 @@ export function createPageSearcher(rootDOM: HTMLElement): PageSearcher {
     let highlights = highlightDOMs.filter((doms) => {
       return doms.every(htmlElementIsVisible)
     }).map((doms) => createHighlight2(doms))
-
-    store.setSearchResult(highlightGroups, highlights);
-  }
-
-  function search(query: string) {
-    if (query === '') {
-      store.clear()
-      return
-    }
-    if (!store.isCleared()) {
-      store.clear()
-    }
-
-    const queryRegExp = new RegExp(query, 'gi')
-    const matchedTextNodes = _searchRecursively(rootDOM, queryRegExp)
-
-    let highlightGroups: HighlightGroup[] = []
-    let highlights: Highlight[] = []
-    matchedTextNodes.forEach((node) => {
-      const highlightGroup = createHighlightGroup(node, queryRegExp)
-      highlightGroups.push(highlightGroup)
-      const groupHighlights = highlightGroup.getGroupHighlights()
-
-      highlights = [...highlights, ...groupHighlights]
-    })
 
     store.setSearchResult(highlightGroups, highlights);
   }
