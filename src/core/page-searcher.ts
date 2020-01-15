@@ -265,12 +265,10 @@ export function createPageSearcher(rootDOM: HTMLElement): PageSearcher {
     if (!allText) return
 
     let match 
-    let matchedTexts = []
     let matchedTextStartIndices = []
     let matchedTextEndIndices = []
     while (match = queryRegExp.exec(allText)) {
       const matchedText = match[0]
-      matchedTexts.push(matchedText)
       matchedTextStartIndices.push(match.index)
       matchedTextEndIndices.push(match.index + matchedText.length)
     }
@@ -291,7 +289,7 @@ export function createPageSearcher(rootDOM: HTMLElement): PageSearcher {
       let clipStartIndex = nodeTextStartIndex
       let clipEndIndex = nodeTextStartIndex
 
-      for (let j = 0; j < matchedTexts.length; j++) {
+      for (let j = 0; j < matchedTextStartIndices.length; j++) {
         const matchedTextStartIndex = matchedTextStartIndices[j]
         const matchedTextEndIndex = matchedTextEndIndices[j]
         if (matchedTextEndIndex > nodeTextStartIndex && matchedTextStartIndex < nodeTextEndIndex) {
