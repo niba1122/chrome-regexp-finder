@@ -7,22 +7,22 @@ interface Highlight {
   unselect(): void
 }
 
-interface Store {
-  setSearchResult(highlightGroups: HighlightGroup[], highlights: Highlight[]): void
+interface Store<HG, H> {
+  setSearchResult(highlightGroups: HG[], highlights: H[]): void
   clear(): void
   isCleared(): boolean
   forwardSelectedHighlight(): void
   backwardSelectedHighlight(): void
-  getSelectedHighlight(): Highlight
-  onClear(listener: Store.ClearListener): void
-  onChangeHighlightSelection(listener: Store.ChangeHighlightSelectionListener): void
+  getSelectedHighlight(): H
+  onClear(listener: Store.ClearListener<HG>): void
+  onChangeHighlightSelection(listener: Store.ChangeHighlightSelectionListener<H>): void
 }
 
 namespace Store {
-  export type ClearListener = (highlightGroups: HighlightGroup[]) => void
-  export type ChangeHighlightSelectionListener = (args: {
-    previousHighlight?: Highlight,
-    nextHighlight?: Highlight,
+  export type ClearListener<HG> = (highlightGroups: HG[]) => void
+  export type ChangeHighlightSelectionListener<H> = (args: {
+    previousHighlight?: H,
+    nextHighlight?: H,
     total: number,
     nextIndex?: number
   }) => void
@@ -81,15 +81,15 @@ function createHighlight(doms: HTMLElement[]): Highlight {
   }
 }
 
-function createStore(): Store {
-  let highlightGroups: HighlightGroup[] = []
-  let highlights: Highlight[] = []
+function createStore<HG, H>(): Store<HG, H> {
+  let highlightGroups: HG[] = []
+  let highlights: H[] = []
   let selectedHighlightIndex = 0
 
-  let clearListener: Store.ClearListener | null = null
-  let changeHighlightSelectionListener: Store.ChangeHighlightSelectionListener | null = null
+  let clearListener: Store.ClearListener<HG> | null = null
+  let changeHighlightSelectionListener: Store.ChangeHighlightSelectionListener<H> | null = null
 
-  function setSearchResult(hg: HighlightGroup[], h: Highlight[]) {
+  function setSearchResult(hg: HG[], h: H[]) {
     highlightGroups = hg
     highlights = h
     selectedHighlightIndex = 0
@@ -156,15 +156,15 @@ function createStore(): Store {
     }
   }
 
-  function getSelectedHighlight(): Highlight {
+  function getSelectedHighlight(): H {
     return highlights[selectedHighlightIndex]
   }
 
-  function onClear(listener: Store.ClearListener) {
+  function onClear(listener: Store.ClearListener<HG>) {
     clearListener = listener
   }
 
-  function onChangeHighlightSelection(listener: Store.ChangeHighlightSelectionListener) {
+  function onChangeHighlightSelection(listener: Store.ChangeHighlightSelectionListener<H>) {
     changeHighlightSelectionListener = listener
   }
 
@@ -182,7 +182,7 @@ function createStore(): Store {
 
 export function createPageSearcher(rootDOM: HTMLElement): PageSearcher {
   let changeHighlightListener: PageSearcher.ChangeHighlightListener | null = null
-  const store = createStore()
+  const store = createStore<HighlightGroup, Highlight>()
 
   store.onClear((highlightGroups) => {
     highlightGroups.forEach((hg) => {
