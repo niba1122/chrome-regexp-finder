@@ -208,20 +208,6 @@ export function createPageSearcher(rootDOM: HTMLElement): PageSearcher {
     }
   })
 
-  function _searchRecursively(dom: Node, query: RegExp): Node[] {
-    let matchedNodes: Node[] = []
-    dom.childNodes.forEach((node) => {
-      if (node.nodeType === Node.TEXT_NODE) {
-        if (node.nodeValue && node.nodeValue.match(query)) {
-          matchedNodes.push(node)
-        }
-      } else if (node.nodeType === Node.ELEMENT_NODE && node.nodeName !== 'SCRIPT') {
-        matchedNodes = matchedNodes.concat(_searchRecursively(node, query))
-      }
-    })
-    return matchedNodes
-  }
-
   function _getTextNodes(dom: Node): [Node[], number[], number] {
     let nodes: Node[] = []
     let nodeTextStartIndices: number[] = []
