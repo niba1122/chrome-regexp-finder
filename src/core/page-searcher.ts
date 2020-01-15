@@ -3,13 +3,17 @@ interface HighlightGroup {
   clear(): void
 }
 
+interface HighlightGroup2 {
+  clear(): void
+}
+
 interface Highlight {
   select(): void
   unselect(): void
 }
 
 interface Store {
-  setSearchResult(highlightGroups: HighlightGroup[], highlights: Highlight[]): void
+  setSearchResult(highlightGroups: HighlightGroup[] | HighlightGroup2[], highlights: Highlight[]): void
   clear(): void
   isCleared(): boolean
   forwardSelectedHighlight(): void
@@ -95,6 +99,46 @@ function createHighlightGroup(node: Node, queryRegExp: RegExp): HighlightGroup {
   return {
     getGroupHighlights,
     clear
+  }
+}
+
+function createHighlightGroup2(highlightGroupDOM: HTMLElement): HighlightGroup2 {
+  function clear() {
+    const newNode = document.createTextNode(highlightGroupDOM.textContent || '')
+    highlightGroupDOM.parentNode?.replaceChild(newNode, highlightGroupDOM)
+  }
+
+  return {
+    clear
+  }
+}
+
+function createHighlight2(doms: HTMLElement[]): Highlight {
+  const highlightColor = '#ffff00'
+  const selectedHighlightColor = '#ff8000'
+
+  doms.forEach((dom) => {
+    dom.style.backgroundColor = selectedHighlightColor
+  })
+
+  function select() {
+    doms.forEach((dom) => {
+      dom.style.backgroundColor = selectedHighlightColor
+    })
+
+    const offset = -150
+    const clientRect = doms[0].getBoundingClientRect()
+    const y = window.pageYOffset + clientRect.top + offset
+    scrollTo(0, y)
+  }
+  function unselect() {
+    doms.forEach((dom) => {
+      dom.style.backgroundColor = highlightColor
+    })
+  }
+  return {
+    select,
+    unselect
   }
 }
 
@@ -262,8 +306,23 @@ export function createPageSearcher(rootDOM: HTMLElement): PageSearcher {
     return [nodes, nodeTextStartIndices, textIndex]
   }
 
-  function search2(dom: HTMLElement, query: RegExp) {
-    const allText = dom.textContent
+  function search2(query: string) {
+    if (query === '') {
+      store.clear()
+      return
+    }
+    if (!store.isCleared()) {
+      store.clear()
+    }
+
+    const queryRegExp = new RegExp(query, 'gi')
+    const matchedTextClass = 'ps-matched-text'
+
+    function htmlElementIsVisible(element: HTMLElement): boolean {
+      return !!element.offsetParent && !element.hidden
+    }
+
+    const allText = rootDOM.textContent
     if (!allText) return
     console.log(allText.length)
 
@@ -271,22 +330,20 @@ export function createPageSearcher(rootDOM: HTMLElement): PageSearcher {
     let matchedTexts = []
     let matchedTextStartIndices = []
     let matchedTextEndIndices = []
-    while (match = query.exec(allText)) {
+    while (match = queryRegExp.exec(allText)) {
       const matchedText = match[0]
       matchedTexts.push(matchedText)
       matchedTextStartIndices.push(match.index)
       matchedTextEndIndices.push(match.index + matchedText.length)
     }
 
-    let [nodes, nodeTextStartIndices] = _getTextNodes(dom)
+    let [nodes, nodeTextStartIndices] = _getTextNodes(rootDOM)
 
-    // console.log(nodeTextStartIndices)
-    // console.log(matchedTextStartIndices)
-
-    let highlightDOMs: HTMLElement[][] = matchedTextStartIndices.map(() => [])
+    let highlightGroups: HighlightGroup2[] = []
 
     for (let i = 0; i < nodes.length; i++) {
-      const currentText = nodes[i].textContent
+      const node = nodes[i]
+      const currentText = node.textContent
       if (!currentText) break
       let newText = ''
 
@@ -309,27 +366,33 @@ export function createPageSearcher(rootDOM: HTMLElement): PageSearcher {
 
           clipStartIndex = replaceStartIndex
           clipEndIndex = replaceEndIndex
-          newText += '<span>' + currentText.substring(clipStartIndex - nodeTextStartIndex, clipEndIndex - nodeTextStartIndex) + '</span>'
+          newText += `<span class="${matchedTextClass} match-${j}">${currentText.substring(clipStartIndex - nodeTextStartIndex, clipEndIndex - nodeTextStartIndex)}</span>`
         }
       }
       clipStartIndex = clipEndIndex
       clipEndIndex = nodeTextEndIndex
       newText += currentText.substring(clipStartIndex - nodeTextStartIndex, clipEndIndex - nodeTextStartIndex)
-      console.log(newText)
-      // const matchedTextClass = 'ps-matched-text'
-      // const text = node.nodeValue
-      // const rawHighlightGroup = text?.replace(queryRegExp, `<span class="${matchedTextClass}" style="background-color: ${highlightColor};">$&</span>`)
 
-      // const highlightGroupDOM = document.createElement('span')
-      // highlightGroupDOM.innerHTML = rawHighlightGroup || ''
+      const highlightGroupDOM = document.createElement('span')
+      highlightGroupDOM.innerHTML = newText
 
-      // node.parentNode?.replaceChild(highlightGroupDOM, node)
+      node.parentNode?.replaceChild(highlightGroupDOM, node)
 
-      // const groupHighlights = Array.prototype.filter.call(
-      //   highlightGroupDOM.querySelectorAll<HTMLElement>(`span.${matchedTextClass}`),
-      //   htmlElementIsVisible
-      // ).map((dom: HTMLElement) => createHighlight(dom))
+      highlightGroups.push(createHighlightGroup2(highlightGroupDOM))
     }
+      
+    let highlightDOMs: HTMLElement[][] = matchedTextStartIndices.map(() => [])
+    matchedTextStartIndices.forEach((_, i) => {
+      rootDOM.querySelectorAll<HTMLElement>(`span.${matchedTextClass}.match-${i}`).forEach((highlightDOM) => {
+        highlightDOMs[i].push(highlightDOM)
+      })
+    })
+
+    let highlights = highlightDOMs.map((doms) => createHighlight2(doms))
+
+    console.log(highlightDOMs)
+
+    store.setSearchResult(highlightGroups, highlights);
   }
 
   function search(query: string) {
@@ -342,8 +405,6 @@ export function createPageSearcher(rootDOM: HTMLElement): PageSearcher {
     }
 
     const queryRegExp = new RegExp(query, 'gi')
-    // console.log(_getTextNodes(rootDOM).map((node) => node.nodeValue))
-    search2(rootDOM, queryRegExp)
     const matchedTextNodes = _searchRecursively(rootDOM, queryRegExp)
 
     let highlightGroups: HighlightGroup[] = []
@@ -379,7 +440,7 @@ export function createPageSearcher(rootDOM: HTMLElement): PageSearcher {
   }
 
   return {
-    search,
+    search: search2,
     nextResult,
     previousResult,
     clear,
