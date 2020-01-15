@@ -280,100 +280,56 @@ export function createPageSearcher(rootDOM: HTMLElement): PageSearcher {
 
     let [nodes, nodeTextStartIndices] = _getTextNodes(dom)
 
-    console.log(nodeTextStartIndices)
-    console.log(matchedTextStartIndices)
+    // console.log(nodeTextStartIndices)
+    // console.log(matchedTextStartIndices)
 
-    for (let i = 0; i < matchedTexts.length; i++) {
-      for (let j = 0; j < nodes.length; j++) {
-        const matchedTextStartIndex = matchedTextStartIndices[i]
-        const matchedTextEndIndex = matchedTextEndIndices[i]
-        const nodeTextStartIndex = nodeTextStartIndices[j]
-        const nodeTextEndIndex = nodeTextStartIndices[j + 1] || nodes.length
-        if (nodeTextEndIndex > matchedTextStartIndex && nodeTextStartIndex < matchedTextEndIndex) {
-          // if (nodeTextStartIndex < matchedTextStartIndex && nodeTextEndIndex <= matchedTextEndIndex) {
-          //   const startIndexInNodeText = matchedTextStartIndex
-          //   const endIndexInNodeText = nodeTextEndIndex
-          // } else if (nodeTextStartIndex < matchedTextStartIndex && nodeTextEndIndex > matchedTextEndIndex) {
-          //   const startIndexInNodeText = matchedTextStartIndex
-          //   const endIndexInNodeText = matchedTextEndIndex
-          // } else if (nodeTextStartIndex >= matchedTextStartIndex && nodeTextEndIndex <= matchedTextEndIndex) {
-          //   const startIndexInNodeText = nodeTextStartIndex
-          //   const endIndexInNodeText = nodeTextEndIndex
-          // } else if (nodeTextStartIndex >= matchedTextStartIndex && nodeTextEndIndex > matchedTextEndIndex) {
-          //   const startIndexInNodeText = nodeTextStartIndex
-          //   const endIndexInNodeText = matchedTextEndIndex
-          // }
+    let highlightDOMs: HTMLElement[][] = matchedTextStartIndices.map(() => [])
 
-          const startIndex = nodeTextStartIndex < matchedTextStartIndex ? matchedTextStartIndex : nodeTextStartIndex
-          const endIndex = nodeTextEndIndex > matchedTextEndIndex ? matchedTextEndIndex : nodeTextEndIndex
+    for (let i = 0; i < nodes.length; i++) {
+      const currentText = nodes[i].textContent
+      if (!currentText) break
+      let newText = ''
+
+      const nodeTextStartIndex = nodeTextStartIndices[i]
+      const nodeTextEndIndex = nodeTextStartIndices[i + 1] || nodes.length
+
+      let clipStartIndex = nodeTextStartIndex
+      let clipEndIndex = nodeTextStartIndex
+
+      for (let j = 0; j < matchedTexts.length; j++) {
+        const matchedTextStartIndex = matchedTextStartIndices[j]
+        const matchedTextEndIndex = matchedTextEndIndices[j]
+        if (matchedTextEndIndex > nodeTextStartIndex && matchedTextStartIndex < nodeTextEndIndex) {
+          const replaceStartIndex = matchedTextStartIndex < nodeTextStartIndex ? nodeTextStartIndex : matchedTextStartIndex
+          const replaceEndIndex = matchedTextEndIndex > nodeTextEndIndex ? nodeTextEndIndex : matchedTextEndIndex
+
+          clipStartIndex = clipEndIndex
+          clipEndIndex = replaceStartIndex
+          newText += currentText.substring(clipStartIndex - nodeTextStartIndex, clipEndIndex - nodeTextStartIndex)
+
+          clipStartIndex = replaceStartIndex
+          clipEndIndex = replaceEndIndex
+          newText += '<span>' + currentText.substring(clipStartIndex - nodeTextStartIndex, clipEndIndex - nodeTextStartIndex) + '</span>'
         }
       }
+      clipStartIndex = clipEndIndex
+      clipEndIndex = nodeTextEndIndex
+      newText += currentText.substring(clipStartIndex - nodeTextStartIndex, clipEndIndex - nodeTextStartIndex)
+      console.log(newText)
+      // const matchedTextClass = 'ps-matched-text'
+      // const text = node.nodeValue
+      // const rawHighlightGroup = text?.replace(queryRegExp, `<span class="${matchedTextClass}" style="background-color: ${highlightColor};">$&</span>`)
+
+      // const highlightGroupDOM = document.createElement('span')
+      // highlightGroupDOM.innerHTML = rawHighlightGroup || ''
+
+      // node.parentNode?.replaceChild(highlightGroupDOM, node)
+
+      // const groupHighlights = Array.prototype.filter.call(
+      //   highlightGroupDOM.querySelectorAll<HTMLElement>(`span.${matchedTextClass}`),
+      //   htmlElementIsVisible
+      // ).map((dom: HTMLElement) => createHighlight(dom))
     }
-
-    // for (let i = 0; i < nodes.length; i++) {
-    //   for (let j = 0; j < matchedTexts.length; j++) {
-    //     const node = nodes[i]
-    //     const nodeTextStartIndex = nodeTextStartIndices[i]
-    //     const previousNodeTextEndIndex = nodeTextStartIndex
-    //     const matchedTextStartIndex = matchedTextStartIndices[j]
-    //     const matchedTextEndIndex = matchedTextEndIndices[j]
-
-    //     if (matchedTextEndIndex < ) break
-    //     if (matchedTextStartIndex >= nodeTextStartIndex) break
-    //     if ()
-    //   }
-    // }
-
-    // console.log(allText)
-    // const matchedTexts = allText?.match(query)
-    // if (!matchedTexts) return
-    // console.log(matchedText)
-    // console.log(Array.from(new Set(result)).sort((a, b) => b.length - a.length))
-
-    // const textNodes = _getTextNodes(dom)
-
-    // function _partialMatch(startIndex: number, endIndex: number, partialTexts: string[]) {
-    //   // const currentNode = textNodes[index]
-    //   const nodes = textNodes.slice(startIndex, endIndex)
-
-    //   const text = nodes.map((node) => node.textContent).join('')
-    //   for (let i = 0; i < partialTexts.length; i++) {
-    //     const partialText = partialTexts[i]
-    //     const res = text.match(partialText)
-    //     if (!res || !res.index) continue
-    //     const isEnd = (res.index + partialText.length) === text.length
-
-    //     if (isEnd) {
-
-    //       break
-    //     }
-    //   }
-    // }
-
-    // let matchedTextNodes: Node[] = []
-    // for (let i = 0; i < textNodes.length; i++) {
-    //   const node = textNodes[i]
-
-    //   for (let j = 0; j < matchedTexts.length; j++) {
-    //     const willMatchText = matchedTexts[j]
-    //     const nodeText = node.textContent
-    //     if (!nodeText) continue
-    //     const res = nodeText.substr(0, nodeText.length).replace(willMatchText, '[highlighted]') + nodeText.slice(nodeText.length) // 最後以外
-    //     if (res != nodeText) {
-    //       node.textContent = res
-    //       break
-    //     }
-
-    //   }
-    //   for (let j = 0; j < matchedTexts.length; j++) {
-    //     const willMatchText = matchedTexts[j]
-    //     let partialTexts: string[] = []
-    //     for (let k = 0; k < willMatchText.length; k++) {
-    //       partialTexts.push(willMatchText.substr(0, j + 1))
-    //     }
-    //   }
-    // }
-    // console.log(textNodes.map((node) => node.textContent))
   }
 
   function search(query: string) {
