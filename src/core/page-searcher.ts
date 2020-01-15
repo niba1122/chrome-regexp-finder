@@ -52,7 +52,7 @@ function createHighlightGroup(highlightGroupDOM: HTMLElement): HighlightGroup {
   }
 }
 
-function createHighlight2(doms: HTMLElement[]): Highlight {
+function createHighlight(doms: HTMLElement[]): Highlight {
   const highlightColor = '#ffff00'
   const selectedHighlightColor = '#ff8000'
 
@@ -312,7 +312,7 @@ export function createPageSearcher(rootDOM: HTMLElement): PageSearcher {
 
     let highlights = highlightDOMs.filter((doms) => {
       return doms.every(htmlElementIsVisible)
-    }).map((doms) => createHighlight2(doms))
+    }).map((doms) => createHighlight(doms))
 
     store.setSearchResult(highlightGroups, highlights);
   }
