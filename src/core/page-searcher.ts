@@ -118,7 +118,7 @@ function createHighlight2(doms: HTMLElement[]): Highlight {
   const selectedHighlightColor = '#ff8000'
 
   doms.forEach((dom) => {
-    dom.style.backgroundColor = selectedHighlightColor
+    dom.style.backgroundColor = highlightColor
   })
 
   function select() {
@@ -388,7 +388,9 @@ export function createPageSearcher(rootDOM: HTMLElement): PageSearcher {
       })
     })
 
-    let highlights = highlightDOMs.map((doms) => createHighlight2(doms))
+    let highlights = highlightDOMs.filter((doms) => {
+      return doms.every(htmlElementIsVisible)
+    }).map((doms) => createHighlight2(doms))
 
     console.log(highlightDOMs)
 
