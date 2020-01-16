@@ -243,7 +243,13 @@ export function createPageSearcher(rootDOM: HTMLElement): PageSearcher {
     const queryRegExp = new RegExp(query, 'gi')
 
     function htmlElementIsVisible(element: HTMLElement): boolean {
-      return !!element.offsetParent && !element.hidden
+      const rect = element.getBoundingClientRect()
+      const left = window.pageXOffset + rect.left
+      const right = window.pageXOffset + rect.right
+      const top = window.pageYOffset + rect.top
+      const bottom = window.pageYOffset + rect.bottom
+      const isIn = right > 0 && left < rootDOM.scrollWidth && bottom > 0 && top < rootDOM.scrollHeight
+      return !!element.offsetParent && !element.hidden && isIn
     }
 
     const allText = rootDOM.textContent
@@ -277,10 +283,12 @@ export function createPageSearcher(rootDOM: HTMLElement): PageSearcher {
       let clipStartIndex = nodeTextStartIndex
       let clipEndIndex = nodeTextStartIndex
 
+      let isMatched = false
       for (let j = 0; j < matchedTextStartIndices.length; j++) {
         const matchedTextStartIndex = matchedTextStartIndices[j]
         const matchedTextEndIndex = matchedTextEndIndices[j]
         if (matchedTextEndIndex > nodeTextStartIndex && matchedTextStartIndex < nodeTextEndIndex) {
+          isMatched = true
           const replaceStartIndex = matchedTextStartIndex < nodeTextStartIndex ? nodeTextStartIndex : matchedTextStartIndex
           const replaceEndIndex = matchedTextEndIndex > nodeTextEndIndex ? nodeTextEndIndex : matchedTextEndIndex
 
@@ -308,9 +316,11 @@ export function createPageSearcher(rootDOM: HTMLElement): PageSearcher {
         )
       )
 
-      node.parentNode?.replaceChild(highlightGroupDOM, node)
+      if (isMatched) {
+        node.parentNode?.replaceChild(highlightGroupDOM, node)
 
-      highlightGroups.push(createHighlightGroup(highlightGroupDOM))
+        highlightGroups.push(createHighlightGroup(highlightGroupDOM))
+      }
     }
 
     let highlights = highlightDOMs.filter((doms) => doms.length > 0 && doms.every(htmlElementIsVisible)).map((doms) => createHighlight(doms))
