@@ -313,9 +313,7 @@ export function createPageSearcher(rootDOM: HTMLElement): PageSearcher {
       highlightGroups.push(createHighlightGroup(highlightGroupDOM))
     }
 
-    let highlights = highlightDOMs.filter((doms) => {
-      return doms.every(htmlElementIsVisible)
-    }).map((doms) => createHighlight(doms))
+    let highlights = highlightDOMs.filter((doms) => doms.every(htmlElementIsVisible)).map((doms) => createHighlight(doms))
 
     store.setSearchResult(highlightGroups, highlights);
   }
