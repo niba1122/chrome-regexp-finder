@@ -241,7 +241,6 @@ export function createPageSearcher(rootDOM: HTMLElement): PageSearcher {
     }
 
     const queryRegExp = new RegExp(query, 'gi')
-    const matchedTextClass = 'ps-matched-text'
 
     function htmlElementIsVisible(element: HTMLElement): boolean {
       return !!element.offsetParent && !element.hidden
