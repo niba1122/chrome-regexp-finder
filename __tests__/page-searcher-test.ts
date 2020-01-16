@@ -8,6 +8,25 @@ function setupPolyfill() {
 
   window.scrollTo = jest.fn()
 
+  HTMLElement.prototype.getBoundingClientRect = () => ({
+    bottom: 10,
+    height: 10,
+    left: 10,
+    right: 10,
+    top: 10,
+    width: 10,
+    x: 10,
+    y: 10,
+    toJSON() { }
+  })
+
+  Object.defineProperty(HTMLBodyElement.prototype, 'scrollWidth', {
+    get() { return 100 }
+  })
+
+  Object.defineProperty(HTMLBodyElement.prototype, 'scrollHeight', {
+    get() { return 100 }
+  })
 }
 
 function setupEachTest() {
