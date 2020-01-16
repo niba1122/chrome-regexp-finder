@@ -220,7 +220,7 @@ export function createPageSearcher(rootDOM: HTMLElement): PageSearcher {
           nodeTextStartIndices.push(textIndex)
           textIndex += node.textContent.length
         }
-      } else if (node.nodeType === Node.ELEMENT_NODE && node.nodeName !== 'SCRIPT') {
+      } else {
         let [childNodes, childNodeTextStartIndices, childTextCount] = _getTextNodes(node)
         nodes = nodes.concat(childNodes)
         nodeTextStartIndices = nodeTextStartIndices.concat(childNodeTextStartIndices.map((i) => i + textIndex))
@@ -266,8 +266,9 @@ export function createPageSearcher(rootDOM: HTMLElement): PageSearcher {
 
     for (let i = 0; i < nodes.length; i++) {
       const node = nodes[i]
+      if (node.parentNode?.nodeName === 'SCRIPT' || node.parentNode?.nodeName === 'NOSCRIPT') continue
       const currentText = node.textContent
-      if (!currentText) break
+      if (!currentText) continue
 
       const highlightGroupDOM = document.createElement('span')
 
@@ -313,7 +314,7 @@ export function createPageSearcher(rootDOM: HTMLElement): PageSearcher {
       highlightGroups.push(createHighlightGroup(highlightGroupDOM))
     }
 
-    let highlights = highlightDOMs.filter((doms) => doms.every(htmlElementIsVisible)).map((doms) => createHighlight(doms))
+    let highlights = highlightDOMs.filter((doms) => doms.length > 0 && doms.every(htmlElementIsVisible)).map((doms) => createHighlight(doms))
 
     store.setSearchResult(highlightGroups, highlights);
   }
