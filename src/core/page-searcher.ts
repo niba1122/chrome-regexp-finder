@@ -262,12 +262,14 @@ export function createPageSearcher(rootDOM: HTMLElement): PageSearcher {
     let [nodes, nodeTextStartIndices] = _getTextNodes(rootDOM)
 
     let highlightGroups: HighlightGroup[] = []
+    let highlightDOMs: HTMLElement[][] = matchedTextStartIndices.map(() => [])
 
     for (let i = 0; i < nodes.length; i++) {
       const node = nodes[i]
       const currentText = node.textContent
       if (!currentText) break
-      let newText = ''
+
+      const highlightGroupDOM = document.createElement('span')
 
       const nodeTextStartIndex = nodeTextStartIndices[i]
       const nodeTextEndIndex = nodeTextStartIndices[i + 1] || nodes.length
@@ -284,31 +286,32 @@ export function createPageSearcher(rootDOM: HTMLElement): PageSearcher {
 
           clipStartIndex = clipEndIndex
           clipEndIndex = replaceStartIndex
-          newText += currentText.substring(clipStartIndex - nodeTextStartIndex, clipEndIndex - nodeTextStartIndex)
+          highlightGroupDOM.appendChild(
+            document.createTextNode(
+              currentText.substring(clipStartIndex - nodeTextStartIndex, clipEndIndex - nodeTextStartIndex)
+            )
+          )
 
           clipStartIndex = replaceStartIndex
           clipEndIndex = replaceEndIndex
-          newText += `<span class="${matchedTextClass} match-${j}">${currentText.substring(clipStartIndex - nodeTextStartIndex, clipEndIndex - nodeTextStartIndex)}</span>`
+          const highlightDOM = document.createElement('span')
+          highlightDOM.textContent = currentText.substring(clipStartIndex - nodeTextStartIndex, clipEndIndex - nodeTextStartIndex)
+          highlightGroupDOM.appendChild(highlightDOM)
+          highlightDOMs[j].push(highlightDOM)
         }
       }
       clipStartIndex = clipEndIndex
       clipEndIndex = nodeTextEndIndex
-      newText += currentText.substring(clipStartIndex - nodeTextStartIndex, clipEndIndex - nodeTextStartIndex)
-
-      const highlightGroupDOM = document.createElement('span')
-      highlightGroupDOM.innerHTML = newText
+      highlightGroupDOM.appendChild(
+        document.createTextNode(
+          currentText.substring(clipStartIndex - nodeTextStartIndex, clipEndIndex - nodeTextStartIndex)
+        )
+      )
 
       node.parentNode?.replaceChild(highlightGroupDOM, node)
 
       highlightGroups.push(createHighlightGroup(highlightGroupDOM))
     }
-      
-    let highlightDOMs: HTMLElement[][] = matchedTextStartIndices.map(() => [])
-    matchedTextStartIndices.forEach((_, i) => {
-      rootDOM.querySelectorAll<HTMLElement>(`span.${matchedTextClass}.match-${i}`).forEach((highlightDOM) => {
-        highlightDOMs[i].push(highlightDOM)
-      })
-    })
 
     let highlights = highlightDOMs.filter((doms) => {
       return doms.every(htmlElementIsVisible)
