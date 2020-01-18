@@ -208,7 +208,7 @@ export function createPageSearcher(rootDOM: HTMLElement): PageSearcher {
     }
   })
 
-  function _getTextNodes(dom: Node): [Node[], number[], number] {
+  function getTextNodes(dom: Node): [Node[], number[], number] {
     let nodes: Node[] = []
     let nodeTextStartIndices: number[] = []
 
@@ -221,7 +221,7 @@ export function createPageSearcher(rootDOM: HTMLElement): PageSearcher {
           textIndex += node.textContent.length
         }
       } else {
-        let [childNodes, childNodeTextStartIndices, childTextCount] = _getTextNodes(node)
+        let [childNodes, childNodeTextStartIndices, childTextCount] = getTextNodes(node)
         nodes = nodes.concat(childNodes)
         nodeTextStartIndices = nodeTextStartIndices.concat(childNodeTextStartIndices.map((i) => i + textIndex))
         textIndex += childTextCount
@@ -264,7 +264,7 @@ export function createPageSearcher(rootDOM: HTMLElement): PageSearcher {
       matchedTextEndIndices.push(match.index + matchedText.length)
     }
 
-    let [nodes, nodeTextStartIndices] = _getTextNodes(rootDOM)
+    let [nodes, nodeTextStartIndices] = getTextNodes(rootDOM)
 
     let highlightGroups: HighlightGroup[] = []
     let highlightDOMs: HTMLElement[][] = matchedTextStartIndices.map(() => [])
