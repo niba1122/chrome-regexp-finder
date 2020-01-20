@@ -2,7 +2,7 @@
 /node_modules
 
 # develop
-/.build-dev
+/build-dev
 
 # production
 /build
