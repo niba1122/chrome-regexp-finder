@@ -12,12 +12,3 @@ chrome.tabs.onActivated.addListener((activeInfo) => {
     message
   )
 })
-
-chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  if (changeInfo.status === 'complete') {
-    console.log('updated!!!!')
-    chrome.tabs.executeScript(tabId, {
-      file: 'contentScript.js'
-    })
-  }
-})
