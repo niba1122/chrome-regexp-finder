@@ -1,6 +1,9 @@
 # dependencies
 /node_modules
 
+# develop
+/.build-dev
+
 # production
 /build
 
@@ -8,3 +11,4 @@
 .DS_Store
 
 npm-debug.log*
+size-plugin.json
