@@ -153,3 +153,7 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
   sendResponse({})
   return true
 })
+
+chrome.tabs.executeScript({
+  file: 'contentScript.js'
+})

@@ -1,7 +1,16 @@
 import { isSearch, isNextResult, isClearResult, ChangeHighlight, MessageType, isPreviousResult } from "./message-type"
 import { createPageSearcher } from "./core/page-searcher";
 
+declare global {
+  interface Window {
+    CHROME_REGEXP_FINDER_IS_INITIALIZED: boolean | undefined,
+  }
+}
+
 function initialize() {
+  if (window.CHROME_REGEXP_FINDER_IS_INITIALIZED) return
+  window.CHROME_REGEXP_FINDER_IS_INITIALIZED = true
+
   const pageSearcher = createPageSearcher(document.body)
 
   pageSearcher.addChangeHighlightListener((total, current) => {
