@@ -8,7 +8,4 @@ Using RegExp Finder, you can search words in a web page with regular expression.
 
 ## Install
 
-[**Chrome** extension]() <!-- TODO: Add chrome extension link inside parenthesis -->
-
-* Set shortcut [here](chrome://extensions/shortcuts)
-
+[**Chrome** extension](https://chrome.google.com/webstore/detail/regexp-finder/ighlmdchigiohmokecgldehohadkdfce?hl=ja)
