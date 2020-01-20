@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "watch": "webpack --mode=development --watch --config config/webpack.dev.js",
-    "build": "webpack --mode=production --config config/webpack.prod.js",
+    "build": "rm -rf ./build/* && webpack --mode=production --config config/webpack.prod.js && zip build.zip -r ./build",
     "test": "jest"
   },
   "devDependencies": {
