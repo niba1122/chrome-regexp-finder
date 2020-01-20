@@ -12,6 +12,7 @@ const config = merge(common, {
     contentScript: PATHS.src + '/contentScript.ts',
     background: PATHS.src + '/background.ts',
   },
+  devtool: false
 });
 
 module.exports = config;
