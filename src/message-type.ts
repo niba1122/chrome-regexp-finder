@@ -8,7 +8,8 @@ export enum MessageType {
   NextResult = 'NEXT_RESULT',
   PreviousResult = 'PREVIOUS_RESULT',
   ClearResult = 'CLEAR_RESULT',
-  ChangeHighlight = 'CHANGE_HIGHLIGHT'
+  ChangeHighlight = 'CHANGE_HIGHLIGHT',
+  GetCursorSelection = 'GET_CURSOR_SELECTION'
 }
 
 export interface Search extends Message {
@@ -56,4 +57,12 @@ export interface ChangeHighlight extends Message {
 
 export function isChangeHighlight(message: Message): message is ChangeHighlight {
   return message.type === MessageType.ChangeHighlight
+}
+
+export interface GetCursorSelection extends Message {
+  type: MessageType.GetCursorSelection
+}
+
+export function isGetCursorSelection(message: Message): message is GetCursorSelection {
+  return message.type === MessageType.GetCursorSelection
 }
