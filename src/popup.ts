@@ -10,6 +10,33 @@ const searchButtonDOM = document.getElementById('search-button') as HTMLElement
 const nextButtonDOM =  document.getElementById('forward-button') as HTMLElement
 const previousButtonDOM = document.getElementById('backward-button') as HTMLElement
 
+class QueryHistoryStorage {
+  private static STORAGE_KEY = 'query_history'
+  private static SEPARATOR = ','
+  private static MAX_COUNT = 10
+  constructor(
+    private getter: (key: string) => string | null,
+    private setter: (key: string, value: string) => void
+  ) { }
+  set(query: string) {
+    const Class = QueryHistoryStorage
+    const current = this.getter(Class.STORAGE_KEY)?.split(Class.SEPARATOR) ?? []
+    const updated = [query, ...current]
+      .filter((value, index, self) => self.indexOf(value) === index)
+      .slice(0, Class.MAX_COUNT)
+    this.setter(Class.STORAGE_KEY, updated.join(Class.SEPARATOR))
+  }
+  getAll(): string[] {
+    const Class = QueryHistoryStorage
+    return this.getter(Class.STORAGE_KEY)?.split(Class.SEPARATOR) ?? []
+  }
+}
+
+const queryHistoryStorage = new QueryHistoryStorage(
+  (key) => localStorage.getItem(key),
+  (key, value) => localStorage.setItem(key, value)
+)
+
 function sendSearchMessage(query: string) {
   const message: Search = {
     type: MessageType.Search,
@@ -63,9 +90,11 @@ function sendPreviousResultMessage() {
   });
 }
 
-let previousQuery = ''
+let previousQueryInPopup = ''
 
-searchFormTextDOM.focus()
+searchFormTextDOM.focus();
+
+searchFormTextDOM.value = queryHistoryStorage.getAll()[0] || ''
 
 chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
   const tab = tabs[0];
@@ -123,25 +152,27 @@ previousButtonDOM.addEventListener('click', () => {
 
 searchButtonDOM.addEventListener('click', () => {
   const query = searchFormTextDOM.value
-  if (query === previousQuery) {
+  if (query === previousQueryInPopup) {
     sendNextResultMessage()
   } else {
     sendSearchMessage(query)
   }
-  previousQuery = query
+  previousQueryInPopup = query
+  queryHistoryStorage.set(query)
 })
 
 addEventListener('keydown', (event) => {
   if (event.key === 'Enter') {
     const query = searchFormTextDOM.value
-    if (query === previousQuery && !event.shiftKey) {
+    if (query === previousQueryInPopup && !event.shiftKey) {
       sendNextResultMessage()
-    } else if (query === previousQuery && event.shiftKey) {
+    } else if (query === previousQueryInPopup && event.shiftKey) {
       sendPreviousResultMessage()
     } else {
       sendSearchMessage(query)
     }
-    previousQuery = query
+    previousQueryInPopup = query
+    queryHistoryStorage.set(query)
   }
 })
 
@@ -176,7 +207,7 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
 
 chrome.tabs.onUpdated.addListener((_tabId, _changeInfo, tab) => {
   if (tab.status === 'complete') {
-    previousQuery = ''
+    previousQueryInPopup = ''
   }
 })
 
