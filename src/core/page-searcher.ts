@@ -46,9 +46,21 @@ function createHighlightGroup(highlightGroupDOM: HTMLElement): HighlightGroup {
     const newNode = document.createTextNode(highlightGroupDOM.textContent || '')
     highlightGroupDOM.parentNode?.replaceChild(newNode, highlightGroupDOM)
   }
+  highlightGroupDOM.setAttribute(HighlightGroup.HIGHLIGHT_GROUP_DOM_ATTRIBUTE, HighlightGroup.HIGHLIGHT_GROUP_DOM_ATTRIBUTE)
 
   return {
     clear
+  }
+}
+namespace HighlightGroup {
+  export const HIGHLIGHT_GROUP_DOM_ATTRIBUTE = 'data-highlight-group'
+
+  // Clear HighlightGroups whenever elements refreshed.
+  export function clearAll() {
+    document.querySelectorAll<HTMLElement>(`[${HIGHLIGHT_GROUP_DOM_ATTRIBUTE}=${HIGHLIGHT_GROUP_DOM_ATTRIBUTE}]`).forEach((dom) => {
+      const highlightGroup = createHighlightGroup(dom)
+      highlightGroup.clear()
+    })
   }
 }
 
@@ -184,10 +196,8 @@ export function createPageSearcher(rootDOM: HTMLElement): PageSearcher {
   let changeHighlightListener: PageSearcher.ChangeHighlightListener | null = null
   const store = createStore<HighlightGroup, Highlight>()
 
-  store.onClear((highlightGroups) => {
-    highlightGroups.forEach((hg) => {
-      hg.clear()
-    })
+  store.onClear((_highlightGroups) => {
+    HighlightGroup.clearAll()
   })
 
   store.onChangeHighlightSelection(({
