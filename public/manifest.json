@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "RegExp Finder",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "RegExp Finder enables you to search words by JavaScript regular expression on web pages.",
   "icons": {
     "16": "icons/icon_16.png",
