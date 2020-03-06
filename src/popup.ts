@@ -1,7 +1,7 @@
 'use strict';
 
 import './popup.css';
-import { Search, MessageType, NextResult, ClearResult, isChangeHighlight, PreviousResult } from './message-type';
+import { Search, MessageType, NextResult, ClearResult, isChangeHighlight, PreviousResult, GetCursorSelection } from './message-type';
 
 const searchFormTextDOM = document.getElementById('search-form-text') as HTMLInputElement
 const searchResultTotalDOM = document.getElementById('search-result-total') as HTMLElement
@@ -66,6 +66,26 @@ function sendPreviousResultMessage() {
 let previousQuery = ''
 
 searchFormTextDOM.focus()
+
+chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
+  const tab = tabs[0];
+  if (tab.id) {
+    const message: GetCursorSelection = {
+      type: MessageType.GetCursorSelection,
+      payload: undefined
+    }
+    chrome.tabs.sendMessage(
+      tab.id,
+      message,
+      (response) => {
+        const text: string | undefined = response.text
+        if (text) {
+          searchFormTextDOM.value = text
+        }
+      }
+    );
+  }
+});
 
 nextButtonDOM.addEventListener('click', () => {
   const message: NextResult = {

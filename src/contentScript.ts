@@ -1,4 +1,4 @@
-import { isSearch, isNextResult, isClearResult, ChangeHighlight, MessageType, isPreviousResult } from "./message-type"
+import { isSearch, isNextResult, isClearResult, ChangeHighlight, MessageType, isPreviousResult, isGetCursorSelection } from "./message-type"
 import { createPageSearcher } from "./core/page-searcher";
 
 declare global {
@@ -33,6 +33,14 @@ function initialize() {
       pageSearcher.previousResult()
     } else if (isClearResult(request)) {
       pageSearcher.clear()
+    } else if (isGetCursorSelection(request)) {
+      const text = window.getSelection()?.toString()
+      if (text) {
+        sendResponse({
+          text
+        })
+        return true
+      }
     }
 
     // Send an empty response
