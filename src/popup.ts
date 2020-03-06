@@ -154,6 +154,12 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
   return true
 })
 
+chrome.tabs.onUpdated.addListener((_tabId, _changeInfo, tab) => {
+  if (tab.status === 'complete') {
+    previousQuery = ''
+  }
+})
+
 chrome.tabs.executeScript({
   file: 'contentScript.js'
 })
