@@ -12,7 +12,7 @@ const previousButtonDOM = document.getElementById('backward-button') as HTMLElem
 
 class QueryHistoryStorage {
   private static STORAGE_KEY = 'query_history'
-  private static SEPARATOR = ','
+  private static SEPARATOR = '//' // `//` cannot exist in a regular expression
   private static MAX_COUNT = 10
   constructor(
     private getter: (key: string) => string | null,
