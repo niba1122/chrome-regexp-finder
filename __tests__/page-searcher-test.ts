@@ -1,4 +1,5 @@
-import { createPageSearcher, PageSearcher } from "../src/core/page-searcher";
+import { createPageSearcher } from "../src/core/page-searcher";
+import { createDOM, createDOMWithScriptTag } from "../src/fixtures/dom"
 
 function setupPolyfill() {
   // https://github.com/jsdom/jsdom/issues/1261#issuecomment-362928131
@@ -29,31 +30,13 @@ function setupPolyfill() {
   })
 }
 
-function setupEachTest() {
-  const rootDOM = document.createElement('body')
-  rootDOM.innerHTML = `
-<h1>Test DOMs</h1>
-<section>
-  <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
-  <p>Curabitur pretium tincidunt lacus. Nulla gravida orci a odio. Nullam varius, turpis et commodo pharetra, est eros bibendum elit, nec luctus magna felis sollicitudin mauris. Integer in mauris eu nibh euismod gravida. Duis ac tellus et risus vulputate vehicula. Donec lobortis risus a elit. Etiam tempor. Ut ullamcorper, ligula eu tempor congue, eros est euismod turpis, id tincidunt sapien risus a quam. Maecenas fermentum consequat mi. Donec fermentum. Pellentesque malesuada nulla a mi. Duis sapien sem, aliquet nec, commodo eget, consequat quis, neque. Aliquam faucibus, elit ut dictum aliquet, felis nisl adipiscing sapien, sed malesuada diam lacus eget erat. Cras mollis scelerisque nunc. Nullam arcu. Aliquam consequat. Curabitur augue lorem, dapibus quis, laoreet et, pretium ac, nisi. Aenean magna nisl, mollis quis, molestie eu, feugiat in, orci. In hac habitasse platea dictumst.</p>
-  <p>Rorem <span>ipsum <span>hogehoge</span></span> sit <span>amet<span></p>
-</section>
-`
-  const pageSearcher = createPageSearcher(rootDOM)
-  return pageSearcher
-}
-
-let pageSearcher!: PageSearcher
-
 beforeAll(() => {
   setupPolyfill()
 })
 
-beforeEach(() => {
-  pageSearcher = setupEachTest()
-})
-
 test('search', (done) => {
+  const dom = createDOM()
+  const pageSearcher = createPageSearcher(dom)
   pageSearcher.addChangeHighlightListener((total, current) => {
     expect(total).toBe(3)
     expect(current).toBe(0)
@@ -63,6 +46,8 @@ test('search', (done) => {
 })
 
 test('search with regexp string', (done) => {
+  const dom = createDOM()
+  const pageSearcher = createPageSearcher(dom)
   pageSearcher.addChangeHighlightListener((total, current) => {
     expect(total).toBe(51)
     expect(current).toBe(0)
@@ -72,6 +57,8 @@ test('search with regexp string', (done) => {
 })
 
 test('no results', (done) => {
+  const dom = createDOM()
+  const pageSearcher = createPageSearcher(dom)
   pageSearcher.addChangeHighlightListener((total, current) => {
     expect(total).toBe(0)
     expect(current).toBe(undefined)
@@ -81,6 +68,8 @@ test('no results', (done) => {
 })
 
 test('forward result', (done) => {
+  const dom = createDOM()
+  const pageSearcher = createPageSearcher(dom)
   pageSearcher.search('tempor')
   pageSearcher.addChangeHighlightListener((total, current) => {
     expect(total).toBe(3)
@@ -91,6 +80,8 @@ test('forward result', (done) => {
 })
 
 test('forward result back to first', (done) => {
+  const dom = createDOM()
+  const pageSearcher = createPageSearcher(dom)
   pageSearcher.search('tempor')
   pageSearcher.nextResult()
   pageSearcher.nextResult()
@@ -103,6 +94,8 @@ test('forward result back to first', (done) => {
 })
 
 test('backward result', (done) => {
+  const dom = createDOM()
+  const pageSearcher = createPageSearcher(dom)
   pageSearcher.search('tempor')
   pageSearcher.previousResult()
   pageSearcher.addChangeHighlightListener((total, current) => {
@@ -114,6 +107,8 @@ test('backward result', (done) => {
 })
 
 test('backward result back to last', (done) => {
+  const dom = createDOM()
+  const pageSearcher = createPageSearcher(dom)
   pageSearcher.search('tempor')
   pageSearcher.addChangeHighlightListener((total, current) => {
     expect(total).toBe(3)
@@ -124,6 +119,8 @@ test('backward result back to last', (done) => {
 })
 
 test('clear result', (done) => {
+  const dom = createDOM()
+  const pageSearcher = createPageSearcher(dom)
   pageSearcher.search('tempor')
   pageSearcher.addChangeHighlightListener((total, current) => {
     expect(total).toBe(0)
@@ -134,6 +131,8 @@ test('clear result', (done) => {
 })
 
 test('search 2 times', (done) => {
+  const dom = createDOM()
+  const pageSearcher = createPageSearcher(dom)
   pageSearcher.search('tempor')
   let step = 0
   pageSearcher.addChangeHighlightListener((total, current) => {
@@ -151,6 +150,8 @@ test('search 2 times', (done) => {
 })
 
 test('another search with regexp string which matched wider', (done) => {
+  const dom = createDOM()
+  const pageSearcher = createPageSearcher(dom)
   pageSearcher.search('l\\w+')
   let step = 0
   pageSearcher.addChangeHighlightListener((total, current) => {
@@ -168,6 +169,8 @@ test('another search with regexp string which matched wider', (done) => {
 })
 
 test('clear result if search by empty text', (done) => {
+  const dom = createDOM()
+  const pageSearcher = createPageSearcher(dom)
   pageSearcher.search('tempor')
   pageSearcher.addChangeHighlightListener((total, current) => {
     expect(total).toBe(0)
@@ -178,6 +181,8 @@ test('clear result if search by empty text', (done) => {
 })
 
 test('search over DOMs', (done) => {
+  const dom = createDOM()
+  const pageSearcher = createPageSearcher(dom)
   pageSearcher.addChangeHighlightListener((total, current) => {
     expect(total).toBe(2)
     expect(current).toBe(0)
@@ -187,18 +192,8 @@ test('search over DOMs', (done) => {
 })
 
 test('search dom including script tags', (done) => {
-  const rootDOM = document.createElement('body')
-  rootDOM.innerHTML = `
-<h1>Test DOMs</h1>
-<section>
-  <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
-  <p>Curabitur pretium tincidunt lacus. Nulla gravida orci a odio. Nullam varius, turpis et commodo pharetra, est eros bibendum elit, nec luctus magna felis sollicitudin mauris. Integer in mauris eu nibh euismod gravida. Duis ac tellus et risus vulputate vehicula. Donec lobortis risus a elit. Etiam tempor. Ut ullamcorper, ligula eu tempor congue, eros est euismod turpis, id tincidunt sapien risus a quam. Maecenas fermentum consequat mi. Donec fermentum. Pellentesque malesuada nulla a mi. Duis sapien sem, aliquet nec, commodo eget, consequat quis, neque. Aliquam faucibus, elit ut dictum aliquet, felis nisl adipiscing sapien, sed malesuada diam lacus eget erat. Cras mollis scelerisque nunc. Nullam arcu. Aliquam consequat. Curabitur augue lorem, dapibus quis, laoreet et, pretium ac, nisi. Aenean magna nisl, mollis quis, molestie eu, feugiat in, orci. In hac habitasse platea dictumst.</p>
-  <script>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</script>
-  <noscript>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</noscript>
-</section>
-`
-  const pageSearcher = createPageSearcher(rootDOM)
-
+  const dom = createDOMWithScriptTag()
+  const pageSearcher = createPageSearcher(dom)
   pageSearcher.addChangeHighlightListener((total, current) => {
     expect(total).toBe(51)
     expect(current).toBe(0)
