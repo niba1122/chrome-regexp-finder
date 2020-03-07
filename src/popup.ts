@@ -1,5 +1,8 @@
 'use strict';
 
+// To output css, import is required
+import './popup.css'
+
 import { MessageType, ClearResult } from './message-type';
 import * as ReactDOM from 'react-dom';
 import App from './popup/App';
