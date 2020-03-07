@@ -16,7 +16,7 @@ namespace Store {
     previousHighlight: H,
     nextHighlight: H,
     total: number,
-    nextIndex?: number
+    nextIndex: number
   }) => void
   export type SearchedListener<H> = (args: {
     initialHighlight?: H
