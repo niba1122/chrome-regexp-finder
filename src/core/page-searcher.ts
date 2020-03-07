@@ -15,10 +15,14 @@ export interface PageSearcher {
   previousResult(): void
   clear(): void
   addChangeHighlightListener(listener: PageSearcher.ChangeHighlightListener): PageSearcher.Unsubscriber
+  // addSearchedListener(listener: PageSearcher.SearchedListener): PageSearcher.Unsubscriber
+  // addClearListener(listener: PageSearcher.ClearListener): PageSearcher.Unsubscriber
 }
 
 namespace PageSearcher {
   export type ChangeHighlightListener = (total: number, current?: number) => void
+  export type SearchedListener = (total: number) => void
+  export type ClearListener = () => void
   export type Unsubscriber = () => void
 }
 
@@ -76,10 +80,31 @@ function createHighlight(doms: HTMLElement[]): Highlight {
 
 export function createPageSearcher(rootDOM: HTMLElement): PageSearcher {
   let changeHighlightListener: PageSearcher.ChangeHighlightListener | null = null
+  // let searchedListener: PageSearcher.SearchedListener | null = null
+  // let clearListener: PageSearcher.ClearListener | null
   const store = createStore<HighlightGroup, Highlight>()
 
   store.onClear((_highlightGroups) => {
     HighlightGroup.clearAll()
+    // if (clearListener) {
+    //   clearListener()
+    // }
+    if (changeHighlightListener) {
+      changeHighlightListener(0, undefined)
+    }
+  })
+
+  store.onSearched(({
+    initialHighlight,
+    total
+  }) => {
+    initialHighlight?.select()
+    // if (searchedListener) {
+    //   searchedListener(total)
+    // }
+    if (changeHighlightListener) {
+      changeHighlightListener(total, total > 0 ? 0 : undefined)
+    }
   })
 
   store.onChangeHighlightSelection(({
@@ -239,11 +264,27 @@ export function createPageSearcher(rootDOM: HTMLElement): PageSearcher {
     }
   }
 
+  // function addSearchedListener(listener: PageSearcher.SearchedListener) {
+  //   searchedListener = listener
+  //   return () => {
+  //     searchedListener = null
+  //   }
+  // }
+
+  // function addClearListener(listener: PageSearcher.ClearListener) {
+  //   clearListener = listener
+  //   return () => {
+  //     clearListener = null
+  //   }
+  // }
+
   return {
     search,
     nextResult,
     previousResult,
     clear,
-    addChangeHighlightListener
+    addChangeHighlightListener,
+    // addSearchedListener,
+    // addClearListener
   }
 }
