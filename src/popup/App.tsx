@@ -46,7 +46,13 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const searchFormTextDOM = searchFormTextDOMRef.current
-    searchFormTextDOM && searchFormTextDOM.focus()
+    if (searchFormTextDOM) {
+      searchFormTextDOM.focus()
+
+      window.requestAnimationFrame(() => {
+        searchFormTextDOM.select()
+      })
+    }
 
     const previousQuery = queryHistoryStorage.getAll()[0]
     previousQuery && setQuery(previousQuery)
