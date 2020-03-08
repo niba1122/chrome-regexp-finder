@@ -1,4 +1,4 @@
-import { isSearch, isNextResult, isClearResult, ChangeHighlight, MessageType, isPreviousResult, isGetCursorSelection } from "./message-type"
+import { isSearch, isNextResult, isClearResult, ChangeHighlight, MessageType, isPreviousResult, isGetCursorSelection, Searched, Cleared } from "./message-type"
 import { createPageSearcher } from "./core/page-searcher";
 
 declare global {
@@ -13,13 +13,30 @@ function initialize() {
 
   const pageSearcher = createPageSearcher(document.body)
 
-  pageSearcher.addChangeHighlightListener((total, current) => {
+  pageSearcher.addSearchedListener((total) => {
+    const message: Searched = {
+      type: MessageType.Searched,
+      payload: {
+        total
+      }
+    }
+    chrome.runtime.sendMessage(message)
+  })
+
+  pageSearcher.addChangeHighlightListener((current) => {
     const message: ChangeHighlight = {
       type: MessageType.ChangeHighlight,
       payload: {
-        total,
         current
       }
+    }
+    chrome.runtime.sendMessage(message)
+  })
+
+  pageSearcher.addClearListener(() => {
+    const message: Cleared = {
+      type: MessageType.Cleared,
+      payload: undefined
     }
     chrome.runtime.sendMessage(message)
   })
