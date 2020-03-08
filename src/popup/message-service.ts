@@ -1,8 +1,28 @@
-import { Search, MessageType, NextResult, PreviousResult, GetCursorSelection, isChangeHighlight, ChangeHighlight } from "../message-type";
+import { Search, MessageType, NextResult, PreviousResult, GetCursorSelection, isChangeHighlight, ChangeHighlight, Searched, isSearched, Cleared, isCleared } from "../message-type";
+
+export function subscribeSearchedMessage(callback: (request: Searched) => void) {
+  chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
+    if (isSearched(request)) {
+      callback(request)
+    }
+    sendResponse({})
+    return true
+  })
+}
 
 export function subscribeChangeHighlightMessage(callback: (request: ChangeHighlight) => void) {
   chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
     if (isChangeHighlight(request)) {
+      callback(request)
+    }
+    sendResponse({})
+    return true
+  })
+}
+
+export function subscribeClearedMessage(callback: (request: Cleared) => void) {
+  chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
+    if (isCleared(request)) {
       callback(request)
     }
     sendResponse({})

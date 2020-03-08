@@ -1,6 +1,6 @@
 import * as React from "react"
 import { useEffect, useState, useRef, useMemo } from "react";
-import { sendGetCursorSelectionMessage, sendNextResultMessage, sendPreviousResultMessage, sendSearchMessage, subscribeChangeHighlightMessage } from "./message-service";
+import { sendGetCursorSelectionMessage, sendNextResultMessage, sendPreviousResultMessage, sendSearchMessage, subscribeChangeHighlightMessage, subscribeSearchedMessage, subscribeClearedMessage } from "./message-service";
 import QueryHistoryStorage from "./query-history-storage";
 
 const App: React.FC = () => {
@@ -74,9 +74,23 @@ const App: React.FC = () => {
       }
     })
 
+    subscribeSearchedMessage((request) => {
+      const total = request.payload.total
+      setTotal(total)
+      if (total > 0) {
+        setCurrent(0)
+      } else {
+        setCurrent(undefined)
+      }
+    })
+
     subscribeChangeHighlightMessage((request) => {
-      setTotal(request.payload.total)
       setCurrent(request.payload.current)
+    })
+
+    subscribeClearedMessage((request) => {
+      setTotal(0)
+      setCurrent(undefined)
     })
 
     chrome.tabs.onUpdated.addListener((_tabId, _changeInfo, tab) => {
