@@ -34,7 +34,6 @@ const App: React.FC = () => {
       sendSearchMessage(query)
     }
     setPreviousQueryInPopup(query)
-    queryHistoryStorage.set(query)
   }
 
   const handleClickNextButton = () => {
@@ -70,15 +69,16 @@ const App: React.FC = () => {
           sendSearchMessage(query)
         }
         setPreviousQueryInPopup(query)
-        queryHistoryStorage.set(query)
       }
     })
 
     subscribeSearchedMessage((request) => {
+      const query = queryRef.current
       const total = request.payload.total
       setTotal(total)
       if (total > 0) {
         setCurrent(0)
+        queryHistoryStorage.set(query)
       } else {
         setCurrent(undefined)
       }
