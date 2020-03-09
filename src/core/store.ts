@@ -20,8 +20,7 @@ namespace Store {
   }) => void
   export type SearchedListener<H> = (args: {
     initialHighlight?: H
-    total: number,
-    initialHighlightIndex?: number
+    total: number
   }) => void
 }
 
@@ -42,7 +41,6 @@ export function createStore<HG, H>(): Store<HG, H> {
       searchedListener({
         initialHighlight: highlights[0],
         total: highlights.length,
-        initialHighlightIndex: highlights.length > 0 ? 0 : undefined
       })
     }
   }
