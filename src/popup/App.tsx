@@ -94,7 +94,7 @@ const App: React.FC = () => {
       setCurrent(request.payload.current)
     })
 
-    subscribeClearedMessage((request) => {
+    subscribeClearedMessage(() => {
       setTotal(0)
       setCurrent(undefined)
     })

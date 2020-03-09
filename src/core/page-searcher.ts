@@ -118,27 +118,31 @@ export function createPageSearcher(rootDOM: HTMLElement): PageSearcher {
     }
   })
 
-  function getTextNodes(dom: Node): [Node[], number[], number] {
-    let nodes: Node[] = []
-    let nodeTextStartIndices: number[] = []
+  function getTextNodes(rootDOM: Node): [Node[], number[]] {
+    function _getTextNodes(rootDOM: Node): [Node[], number[], number] {
+      let nodes: Node[] = []
+      let nodeTextStartIndices: number[] = []
 
-    let textIndex = 0 
-    dom.childNodes.forEach((node) => {
-      if (node.nodeType === Node.TEXT_NODE) {
-        if (node.textContent) {
-          nodes.push(node)
-          nodeTextStartIndices.push(textIndex)
-          textIndex += node.textContent.length
+      let textIndex = 0 
+      rootDOM.childNodes.forEach((node) => {
+        if (node.nodeType === Node.TEXT_NODE) {
+          if (node.textContent) {
+            nodes.push(node)
+            nodeTextStartIndices.push(textIndex)
+            textIndex += node.textContent.length
+          }
+        } else {
+          let [childNodes, childNodeTextStartIndices, childTextCount] = _getTextNodes(node)
+          nodes = nodes.concat(childNodes)
+          nodeTextStartIndices = nodeTextStartIndices.concat(childNodeTextStartIndices.map((i) => i + textIndex))
+          textIndex += childTextCount
         }
-      } else {
-        let [childNodes, childNodeTextStartIndices, childTextCount] = getTextNodes(node)
-        nodes = nodes.concat(childNodes)
-        nodeTextStartIndices = nodeTextStartIndices.concat(childNodeTextStartIndices.map((i) => i + textIndex))
-        textIndex += childTextCount
-      }
 
-    })
-    return [nodes, nodeTextStartIndices, textIndex]
+      })
+      return [nodes, nodeTextStartIndices, textIndex]
+    }
+    const result = _getTextNodes(rootDOM)
+    return [result[0], result[1]]
   }
 
   function search(query: string) {
