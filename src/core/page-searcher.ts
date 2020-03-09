@@ -10,20 +10,35 @@ interface Highlight {
 }
 
 export interface PageSearcher {
-  search(query: string): void
+  search(query: string, flags: string): void
   nextResult(): void
   previousResult(): void
   clear(): void
   addChangeHighlightListener(listener: PageSearcher.ChangeHighlightListener): PageSearcher.Unsubscriber
   addSearchedListener(listener: PageSearcher.SearchedListener): PageSearcher.Unsubscriber
   addClearListener(listener: PageSearcher.ClearListener): PageSearcher.Unsubscriber
+  addErrorListener(listener: PageSearcher.ErrorListener): PageSearcher.Unsubscriber
 }
 
-namespace PageSearcher {
+type GlobalError = Error
+export namespace PageSearcher {
   export type ChangeHighlightListener = (current: number) => void
   export type SearchedListener = (total: number) => void
   export type ClearListener = () => void
+  export type ErrorListener = (error: PageSearcher.Error) => void
   export type Unsubscriber = () => void
+
+  export enum ErrorType {
+    InvalidFlags, Unhandled
+  }
+  export interface InvalidFlagsError {
+    type: ErrorType.InvalidFlags
+  }
+  export interface UnhandledError {
+    type: ErrorType.Unhandled
+    error: GlobalError
+  }
+  export type Error = InvalidFlagsError | UnhandledError
 }
 
 function createHighlightGroup(highlightGroupDOM: HTMLElement): HighlightGroup {
@@ -81,7 +96,8 @@ function createHighlight(doms: HTMLElement[]): Highlight {
 export function createPageSearcher(rootDOM: HTMLElement): PageSearcher {
   let changeHighlightListener: PageSearcher.ChangeHighlightListener | null = null
   let searchedListener: PageSearcher.SearchedListener | null = null
-  let clearListener: PageSearcher.ClearListener | null
+  let clearListener: PageSearcher.ClearListener | null = null
+  let errorListener: PageSearcher.ErrorListener | null = null
   const store = createStore<HighlightGroup, Highlight>()
 
   store.onClear((_highlightGroups) => {
@@ -145,7 +161,7 @@ export function createPageSearcher(rootDOM: HTMLElement): PageSearcher {
     return [result[0], result[1]]
   }
 
-  function search(query: string) {
+  function search(query: string, flags: string) {
     if (query === '') {
       store.clear()
       return
@@ -154,7 +170,31 @@ export function createPageSearcher(rootDOM: HTMLElement): PageSearcher {
       store.clear()
     }
 
-    const queryRegExp = new RegExp(query, 'gi')
+    const queryRegExp = (() => {
+      try {
+        return new RegExp(query, flags)
+      } catch (e) {
+        return e as Error
+      }
+    })()
+    if (queryRegExp instanceof Error) {
+      if (errorListener) {
+        const mappedError: PageSearcher.Error = (() => {
+          if (queryRegExp.message.includes('flags')) {
+            return {
+              type: PageSearcher.ErrorType.InvalidFlags,
+            } as PageSearcher.InvalidFlagsError
+          } else {
+            return {
+              type: PageSearcher.ErrorType.Unhandled,
+              error: queryRegExp
+            } as PageSearcher.UnhandledError
+          }
+        })()
+        errorListener(mappedError)
+      }
+      return
+    }
 
     function htmlElementIsVisible(element: HTMLElement): boolean {
       const rect = element.getBoundingClientRect()
@@ -275,6 +315,13 @@ export function createPageSearcher(rootDOM: HTMLElement): PageSearcher {
     }
   }
 
+  function addErrorListener(listener: PageSearcher.ErrorListener) {
+    errorListener = listener
+    return () => {
+      errorListener = null
+    }
+  }
+
   return {
     search,
     nextResult,
@@ -282,6 +329,7 @@ export function createPageSearcher(rootDOM: HTMLElement): PageSearcher {
     clear,
     addChangeHighlightListener,
     addSearchedListener,
-    addClearListener
+    addClearListener,
+    addErrorListener
   }
 }

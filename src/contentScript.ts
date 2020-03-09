@@ -43,7 +43,7 @@ function initialize() {
 
   chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
     if (isSearch(request)) {
-      pageSearcher.search(request.payload.query)
+      pageSearcher.search(request.payload.query, 'gi')
     } else if (isNextResult(request)) {
       pageSearcher.nextResult()
     } else if (isPreviousResult(request)) {

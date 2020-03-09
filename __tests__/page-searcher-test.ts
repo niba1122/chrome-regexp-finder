@@ -1,4 +1,4 @@
-import { createPageSearcher } from "../src/core/page-searcher";
+import { createPageSearcher, PageSearcher } from "../src/core/page-searcher";
 import { createDOM, createDOMWithScriptTag } from "../src/fixtures/dom"
 
 function setupPolyfill() {
@@ -44,7 +44,7 @@ test('search', (done) => {
     done()
   })
 
-  pageSearcher.search('tempor')
+  pageSearcher.search('tempor', 'gi')
 })
 
 test('search with regexp string', (done) => {
@@ -57,7 +57,7 @@ test('search with regexp string', (done) => {
     done()
   })
 
-  pageSearcher.search('l\\w+')
+  pageSearcher.search('l\\w+', 'gi')
 })
 
 test('no results', (done) => {
@@ -70,7 +70,7 @@ test('no results', (done) => {
     done()
   })
 
-  pageSearcher.search('asdfasdf')
+  pageSearcher.search('asdfasdf', 'gi')
 })
 
 test('forward result', (done) => {
@@ -86,7 +86,7 @@ test('forward result', (done) => {
     done()
   })
 
-  pageSearcher.search('tempor')
+  pageSearcher.search('tempor', 'gi')
   pageSearcher.nextResult()
 })
 
@@ -107,7 +107,7 @@ test('forward result back to first', (done) => {
     }
   })
 
-  pageSearcher.search('tempor')
+  pageSearcher.search('tempor', 'gi')
   pageSearcher.nextResult()
   pageSearcher.nextResult()
   pageSearcher.nextResult()
@@ -130,7 +130,7 @@ test('backward result', (done) => {
     }
   })
 
-  pageSearcher.search('tempor')
+  pageSearcher.search('tempor', 'gi')
   pageSearcher.previousResult()
   pageSearcher.previousResult()
 })
@@ -148,7 +148,7 @@ test('backward result back to last', (done) => {
     done()
   })
 
-  pageSearcher.search('tempor')
+  pageSearcher.search('tempor', 'gi')
   pageSearcher.previousResult()
 })
 
@@ -165,7 +165,7 @@ test('clear result', (done) => {
     done()
   })
 
-  pageSearcher.search('tempor')
+  pageSearcher.search('tempor', 'gi')
   pageSearcher.clear()
 })
 
@@ -188,8 +188,8 @@ test('search 2 times', (done) => {
     expect(searchCount).toBe(1)
   })
 
-  pageSearcher.search('tempor')
-  pageSearcher.search('quis')
+  pageSearcher.search('tempor', 'gi')
+  pageSearcher.search('quis', 'gi')
 })
 
 test('another search with regexp string which matched wider', (done) => {
@@ -211,8 +211,8 @@ test('another search with regexp string which matched wider', (done) => {
     expect(searchCount).toBe(1)
   })
 
-  pageSearcher.search('l\\w+')
-  pageSearcher.search('l\\w+\\.')
+  pageSearcher.search('l\\w+', 'gi')
+  pageSearcher.search('l\\w+\\.', 'gi')
 })
 
 test('clear result if search by empty text', (done) => {
@@ -225,8 +225,8 @@ test('clear result if search by empty text', (done) => {
     done()
   })
 
-  pageSearcher.search('tempor')
-  pageSearcher.search('')
+  pageSearcher.search('tempor', 'gi')
+  pageSearcher.search('', 'gi')
 })
 
 test('search over DOMs', (done) => {
@@ -239,7 +239,7 @@ test('search over DOMs', (done) => {
     done()
   })
 
-  pageSearcher.search('ipsum\\s\\w+\\ssit\\samet')
+  pageSearcher.search('ipsum\\s\\w+\\ssit\\samet', 'gi')
 })
 
 test('search dom including script tags', (done) => {
@@ -252,5 +252,31 @@ test('search dom including script tags', (done) => {
     done()
   })
 
-  pageSearcher.search('l\\w+')
+  pageSearcher.search('l\\w+', 'gi')
+})
+
+test('search with `g` flag', (done) => {
+  const dom = createDOM()
+  const pageSearcher = createPageSearcher(dom)
+
+  expect.assertions(1)
+  pageSearcher.addSearchedListener((total) => {
+    expect(total).toBe(3)
+    done()
+  })
+
+  pageSearcher.search('Nulla', 'g')
+})
+
+test('search with invalid flag', (done) => {
+  const dom = createDOM()
+  const pageSearcher = createPageSearcher(dom)
+
+  expect.assertions(1)
+  pageSearcher.addErrorListener((error) => {
+    expect(error.type).toBe(PageSearcher.ErrorType.InvalidFlags)
+    done()
+  })
+
+  pageSearcher.search('Lorem', 'hoge')
 })
