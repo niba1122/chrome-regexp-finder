@@ -1,4 +1,4 @@
-import { Search, MessageType, NextResult, PreviousResult, GetCursorSelection, isChangeHighlight, ChangeHighlight, Searched, isSearched, Cleared, isCleared } from "../message-type";
+import { Search, MessageType, NextResult, PreviousResult, GetCursorSelection, isChangeHighlight, ChangeHighlight, Searched, isSearched, Cleared, isCleared, MessageError, isError } from "../message-type";
 
 export function subscribeSearchedMessage(callback: (request: Searched) => void) {
   chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
@@ -30,6 +30,16 @@ export function subscribeClearedMessage(callback: (request: Cleared) => void) {
   })
 }
 
+export function subscribeErrorMessage(callback: (request: MessageError) => void) {
+  chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
+    if (isError(request)) {
+      callback(request)
+    }
+    sendResponse({})
+    return true
+  })
+}
+
 export function sendGetCursorSelectionMessage(callback: (text: string | undefined) => void) {
   chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
     const tab = tabs[0];
@@ -49,11 +59,12 @@ export function sendGetCursorSelectionMessage(callback: (text: string | undefine
   })
 }
 
-export function sendSearchMessage(query: string) {
+export function sendSearchMessage(query: string, flags: string) {
   const message: Search = {
     type: MessageType.Search,
     payload: {
-      query
+      query,
+      flags
     }
   }
 

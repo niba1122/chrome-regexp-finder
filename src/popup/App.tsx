@@ -1,39 +1,63 @@
 import * as React from "react"
 import { useEffect, useState, useRef, useMemo } from "react";
-import { sendGetCursorSelectionMessage, sendNextResultMessage, sendPreviousResultMessage, sendSearchMessage, subscribeChangeHighlightMessage, subscribeSearchedMessage, subscribeClearedMessage } from "./message-service";
-import QueryHistoryStorage from "./query-history-storage";
+import { sendGetCursorSelectionMessage, sendNextResultMessage, sendPreviousResultMessage, sendSearchMessage, subscribeChangeHighlightMessage, subscribeSearchedMessage, subscribeClearedMessage, subscribeErrorMessage } from "./message-service";
+import SearchConditionHistoryStorage from "./query-history-storage";
+import SearchCondition, { searchConditionsAreEqual } from "./search-condition";
+
+const INITIAL_REGEXP_FLAGS = 'gi'
 
 const App: React.FC = () => {
   const [total, setTotal] = useState(0)
 
   const [current, setCurrent] = useState<number | undefined>()
 
-  const [query, setQuery] = useState('')
-  const queryRef = useValueRef(query)
+  const [searchCondition, setSearchCondition] = useState<SearchCondition>({
+    query: '',
+    flags: INITIAL_REGEXP_FLAGS
+  })
+  const searchConditionRef = useValueRef(searchCondition)
 
-  const [previousQueryInPopup, setPreviousQueryInPopup] = useState('')
-  const previousQueryInPopupRef = useValueRef(previousQueryInPopup)
+  const [previousSearchCondition, setPreviousSearchCondition] = useState<SearchCondition | null>(null)
+  const previousSearchConditionRef = useValueRef(previousSearchCondition)
+
+  const flagsAreValid = useMemo(() => {
+    try {
+      new RegExp('', searchCondition.flags)
+      return true
+    } catch {
+      return false
+    }
+  }, [searchCondition.flags])
 
   const searchFormTextDOMRef = useRef<HTMLInputElement>(null)
 
   const queryHistoryStorage = useMemo(() => {
-    return new QueryHistoryStorage(
+    return new SearchConditionHistoryStorage(
       (key) => localStorage.getItem(key),
       (key, value) => localStorage.setItem(key, value)
     )
   }, [])
 
   const handleChangeSearchText: React.ChangeEventHandler<HTMLInputElement> = (event) => {
-    setQuery(event.target.value)
+    const query = event.target.value
+    setSearchCondition((state) => ({...state, query }))
+  }
+
+  const handleChangeFlags: React.ChangeEventHandler<HTMLInputElement> = (event) => {
+    const flags = event.target.value
+    setSearchCondition((state) => ({...state, flags }))
   }
 
   const handleClickSearchButton = () => {
-    if (query === previousQueryInPopup) {
+    if (
+      previousSearchCondition
+      && searchConditionsAreEqual(previousSearchCondition, searchCondition)
+    ) {
       sendNextResultMessage()
     } else {
-      sendSearchMessage(query)
+      sendSearchMessage(searchCondition.query, searchCondition.flags)
     }
-    setPreviousQueryInPopup(query)
+    setPreviousSearchCondition(searchCondition)
   }
 
   const handleClickNextButton = () => {
@@ -54,37 +78,50 @@ const App: React.FC = () => {
       })
     }
 
-    const previousQuery = queryHistoryStorage.getAll()[0]
-    previousQuery && setQuery(previousQuery)
+    const savedSearchCondition = queryHistoryStorage.getAll()[0]
+    if (savedSearchCondition) {
+      setSearchCondition(savedSearchCondition)
+    }
 
     sendGetCursorSelectionMessage((text) => {
       if (text) {
-        setQuery(text)
+        setSearchCondition({
+          query: text,
+          flags: INITIAL_REGEXP_FLAGS
+        })
       }
     })
 
     addEventListener('keydown', (event) => {
-      const query = queryRef.current
-      const previousQueryInPopup = previousQueryInPopupRef.current
+      const searchCondition = searchConditionRef.current
+      const previousSearchCondition = previousSearchConditionRef.current
       if (event.key === 'Enter') {
-        if (query === previousQueryInPopup && !event.shiftKey) {
+        if (
+          previousSearchCondition
+          && searchConditionsAreEqual(previousSearchCondition, searchCondition)
+          && !event.shiftKey
+        ) {
           sendNextResultMessage()
-        } else if (query === previousQueryInPopup && event.shiftKey) {
+        } else if (
+          previousSearchCondition
+          && searchConditionsAreEqual(previousSearchCondition, searchCondition)
+          && event.shiftKey
+        ) {
           sendPreviousResultMessage()
         } else {
-          sendSearchMessage(query)
+          sendSearchMessage(searchCondition.query, searchCondition.flags)
         }
-        setPreviousQueryInPopup(query)
+        setPreviousSearchCondition(searchCondition)
       }
     })
 
     subscribeSearchedMessage((request) => {
-      const query = queryRef.current
+      const searchCondition = searchConditionRef.current
       const total = request.payload.total
       setTotal(total)
       if (total > 0) {
         setCurrent(0)
-        queryHistoryStorage.set(query)
+        queryHistoryStorage.set(searchCondition)
       } else {
         setCurrent(undefined)
       }
@@ -99,9 +136,16 @@ const App: React.FC = () => {
       setCurrent(undefined)
     })
 
+    // subscribeErrorMessage((request) => {
+    //   const error = request.payload.error
+    //   if (error.type === PageSearcher.ErrorType.InvalidFlags) {
+    //     console.error('Invalid flag')
+    //   }
+    // })
+
     chrome.tabs.onUpdated.addListener((_tabId, _changeInfo, tab) => {
       if (tab.status === 'complete') {
-        setPreviousQueryInPopup('')
+        setPreviousSearchCondition(null)
       }
     })
   }, [])
@@ -110,7 +154,23 @@ const App: React.FC = () => {
     <div className="search-form">
       <div className="search-form__text">
         <span className="query-text">
-          <input className="query-text__input" type="text" value={query} onChange={handleChangeSearchText} placeholder="[a-z]+.*\w" ref={searchFormTextDOMRef} />
+          <span className="query-text__slash">/</span>
+          <input
+            className="query-text__query"
+            type="text"
+            value={searchCondition.query}
+            onChange={handleChangeSearchText}
+            placeholder="[a-z]+.*\w"
+            ref={searchFormTextDOMRef}
+          />
+          <span className="query-text__slash">/</span>
+          <input
+            className={`query-text__flags${ flagsAreValid ? '' : ' query-text__flags--invalid' }`}
+            type="text"
+            value={searchCondition.flags}
+            onChange={handleChangeFlags}
+            placeholder={INITIAL_REGEXP_FLAGS}
+          />
         </span>
       </div>
       <div className="search-form__count">

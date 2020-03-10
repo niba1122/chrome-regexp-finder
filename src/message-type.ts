@@ -1,3 +1,5 @@
+import { PageSearcher } from "./core/page-searcher"
+
 interface Message {
   type: MessageType,
   payload: unknown
@@ -11,13 +13,15 @@ export enum MessageType {
   ChangeHighlight = 'CHANGE_HIGHLIGHT',
   GetCursorSelection = 'GET_CURSOR_SELECTION',
   Searched = 'SEARCHED',
-  Cleared = 'CLEARED'
+  Cleared = 'CLEARED',
+  Error = 'ERROR'
 }
 
 export interface Search extends Message {
   type: MessageType.Search,
   payload: {
-    query: string
+    query: string,
+    flags: string
   }
 }
 
@@ -85,4 +89,15 @@ export interface Cleared extends Message {
 
 export function isCleared(message: Message): message is Cleared {
   return message.type === MessageType.Cleared
+}
+
+export interface MessageError extends Message {
+  type: MessageType.Error
+  payload: {
+    error: PageSearcher.Error
+  }
+}
+
+export function isError(message: Message): message is MessageError {
+  return message.type === MessageType.Error
 }

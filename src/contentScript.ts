@@ -1,4 +1,4 @@
-import { isSearch, isNextResult, isClearResult, ChangeHighlight, MessageType, isPreviousResult, isGetCursorSelection, Searched, Cleared } from "./message-type"
+import { isSearch, isNextResult, isClearResult, ChangeHighlight, MessageType, isPreviousResult, isGetCursorSelection, Searched, Cleared, isError, MessageError } from "./message-type"
 import { createPageSearcher } from "./core/page-searcher";
 
 declare global {
@@ -41,9 +41,19 @@ function initialize() {
     chrome.runtime.sendMessage(message)
   })
 
+  pageSearcher.addErrorListener((error) => {
+    const message: MessageError = {
+      type: MessageType.Error,
+      payload: {
+        error
+      }
+    }
+    chrome.runtime.sendMessage(message)
+  })
+
   chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
     if (isSearch(request)) {
-      pageSearcher.search(request.payload.query, 'gi')
+      pageSearcher.search(request.payload.query, request.payload.flags)
     } else if (isNextResult(request)) {
       pageSearcher.nextResult()
     } else if (isPreviousResult(request)) {
