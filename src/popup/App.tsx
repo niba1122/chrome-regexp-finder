@@ -1,7 +1,7 @@
 import * as React from "react"
 import { useEffect, useState, useRef, useMemo } from "react";
 import { sendGetCursorSelectionMessage, sendNextResultMessage, sendPreviousResultMessage, sendSearchMessage, subscribeChangeHighlightMessage, subscribeSearchedMessage, subscribeClearedMessage, subscribeErrorMessage } from "./message-service";
-import SearchConditionHistoryStorage from "./query-history-storage";
+import SearchConditionHistoryStorage from "./search-condition-history-storage";
 import SearchCondition, { searchConditionsAreEqual } from "./search-condition";
 
 const INITIAL_REGEXP_FLAGS = 'gi'
