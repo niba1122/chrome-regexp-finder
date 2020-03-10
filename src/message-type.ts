@@ -1,7 +1,4 @@
-interface Message {
-  type: MessageType,
-  payload: unknown
-}
+import { PageSearcher } from "./core/page-searcher"
 
 export enum MessageType {
   Search = 'SEARCH',
@@ -9,60 +6,68 @@ export enum MessageType {
   PreviousResult = 'PREVIOUS_RESULT',
   ClearResult = 'CLEAR_RESULT',
   ChangeHighlight = 'CHANGE_HIGHLIGHT',
-  GetCursorSelection = 'GET_CURSOR_SELECTION'
+  GetCursorSelection = 'GET_CURSOR_SELECTION',
+  Searched = 'SEARCHED',
+  Cleared = 'CLEARED',
+  Error = 'ERROR'
 }
 
-export interface Search extends Message {
+export interface SearchMessage {
   type: MessageType.Search,
   payload: {
-    query: string
+    query: string,
+    flags: string
   }
 }
 
-export function isSearch(message: Message): message is Search {
-  return message.type === MessageType.Search
-}
-
-export interface NextResult extends Message {
+export interface NextResultMessage {
   type: MessageType.NextResult,
 }
 
-export function isNextResult(message: Message): message is NextResult {
-  return message.type === MessageType.NextResult
-}
-
-export interface PreviousResult extends Message {
+export interface PreviousResultMessage {
   type: MessageType.PreviousResult,
 }
 
-export function isPreviousResult(message: Message): message is NextResult {
-  return message.type === MessageType.PreviousResult
-}
-
-export interface ClearResult extends Message {
+export interface ClearResultMessage {
   type: MessageType.ClearResult,
 }
 
-export function isClearResult(message: Message): message is ClearResult {
-  return message.type === MessageType.ClearResult
-}
-
-export interface ChangeHighlight extends Message {
+export interface ChangeHighlightMessage {
   type: MessageType.ChangeHighlight,
   payload: {
-    total: number,
-    current?: number
+    current: number
   }
 }
 
-export function isChangeHighlight(message: Message): message is ChangeHighlight {
-  return message.type === MessageType.ChangeHighlight
-}
-
-export interface GetCursorSelection extends Message {
+export interface GetCursorSelectionMessage {
   type: MessageType.GetCursorSelection
 }
 
-export function isGetCursorSelection(message: Message): message is GetCursorSelection {
-  return message.type === MessageType.GetCursorSelection
+export interface SearchedMessage {
+  type: MessageType.Searched,
+  payload: {
+    total: number
+  }
 }
+
+export interface ClearedMessage {
+  type: MessageType.Cleared
+}
+
+export interface ErrorMessage {
+  type: MessageType.Error
+  payload: {
+    error: PageSearcher.Error
+  }
+}
+
+export type Message = SearchMessage
+  | NextResultMessage
+  | PreviousResultMessage
+  | ClearResultMessage
+  | ChangeHighlightMessage
+  | GetCursorSelectionMessage
+  | SearchedMessage
+  | ClearedMessage
+  | ErrorMessage
+

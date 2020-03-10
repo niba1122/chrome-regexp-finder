@@ -1,4 +1,5 @@
 import { createPageSearcher, PageSearcher } from "../src/core/page-searcher";
+import { createDOM, createDOMWithScriptTag } from "../src/fixtures/dom"
 
 function setupPolyfill() {
   // https://github.com/jsdom/jsdom/issues/1261#issuecomment-362928131
@@ -29,180 +30,253 @@ function setupPolyfill() {
   })
 }
 
-function setupEachTest() {
-  const rootDOM = document.createElement('body')
-  rootDOM.innerHTML = `
-<h1>Test DOMs</h1>
-<section>
-  <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
-  <p>Curabitur pretium tincidunt lacus. Nulla gravida orci a odio. Nullam varius, turpis et commodo pharetra, est eros bibendum elit, nec luctus magna felis sollicitudin mauris. Integer in mauris eu nibh euismod gravida. Duis ac tellus et risus vulputate vehicula. Donec lobortis risus a elit. Etiam tempor. Ut ullamcorper, ligula eu tempor congue, eros est euismod turpis, id tincidunt sapien risus a quam. Maecenas fermentum consequat mi. Donec fermentum. Pellentesque malesuada nulla a mi. Duis sapien sem, aliquet nec, commodo eget, consequat quis, neque. Aliquam faucibus, elit ut dictum aliquet, felis nisl adipiscing sapien, sed malesuada diam lacus eget erat. Cras mollis scelerisque nunc. Nullam arcu. Aliquam consequat. Curabitur augue lorem, dapibus quis, laoreet et, pretium ac, nisi. Aenean magna nisl, mollis quis, molestie eu, feugiat in, orci. In hac habitasse platea dictumst.</p>
-  <p>Rorem <span>ipsum <span>hogehoge</span></span> sit <span>amet<span></p>
-</section>
-`
-  const pageSearcher = createPageSearcher(rootDOM)
-  return pageSearcher
-}
-
-let pageSearcher!: PageSearcher
-
 beforeAll(() => {
   setupPolyfill()
 })
 
-beforeEach(() => {
-  pageSearcher = setupEachTest()
-})
-
 test('search', (done) => {
-  pageSearcher.addChangeHighlightListener((total, current) => {
+  const dom = createDOM()
+  const pageSearcher = createPageSearcher(dom)
+
+  expect.assertions(1)
+  pageSearcher.addSearchedListener((total) => {
     expect(total).toBe(3)
-    expect(current).toBe(0)
     done()
   })
-  pageSearcher.search('tempor')
+
+  pageSearcher.search('tempor', 'gi')
 })
 
 test('search with regexp string', (done) => {
-  pageSearcher.addChangeHighlightListener((total, current) => {
+  const dom = createDOM()
+  const pageSearcher = createPageSearcher(dom)
+
+  expect.assertions(1)
+  pageSearcher.addSearchedListener((total) => {
     expect(total).toBe(51)
-    expect(current).toBe(0)
     done()
   })
-  pageSearcher.search('l\\w+')
+
+  pageSearcher.search('l\\w+', 'gi')
 })
 
 test('no results', (done) => {
-  pageSearcher.addChangeHighlightListener((total, current) => {
+  const dom = createDOM()
+  const pageSearcher = createPageSearcher(dom)
+
+  expect.assertions(1)
+  pageSearcher.addSearchedListener((total) => {
     expect(total).toBe(0)
-    expect(current).toBe(undefined)
     done()
   })
-  pageSearcher.search('asdfasdf')
+
+  pageSearcher.search('asdfasdf', 'gi')
 })
 
 test('forward result', (done) => {
-  pageSearcher.search('tempor')
-  pageSearcher.addChangeHighlightListener((total, current) => {
+  const dom = createDOM()
+  const pageSearcher = createPageSearcher(dom)
+
+  expect.assertions(2)
+  pageSearcher.addSearchedListener((total) => {
     expect(total).toBe(3)
+  })
+  pageSearcher.addChangeHighlightListener((current) => {
     expect(current).toBe(1)
     done()
   })
+
+  pageSearcher.search('tempor', 'gi')
   pageSearcher.nextResult()
 })
 
 test('forward result back to first', (done) => {
-  pageSearcher.search('tempor')
-  pageSearcher.nextResult()
-  pageSearcher.nextResult()
-  pageSearcher.addChangeHighlightListener((total, current) => {
+  const dom = createDOM()
+  const pageSearcher = createPageSearcher(dom)
+
+  expect.assertions(2)
+  pageSearcher.addSearchedListener((total) => {
     expect(total).toBe(3)
-    expect(current).toBe(0)
-    done()
   })
+  let count = 0
+  pageSearcher.addChangeHighlightListener((current) => {
+    count++
+    if (count === 3) {
+      expect(current).toBe(0)
+      done()
+    }
+  })
+
+  pageSearcher.search('tempor', 'gi')
+  pageSearcher.nextResult()
+  pageSearcher.nextResult()
   pageSearcher.nextResult()
 })
 
 test('backward result', (done) => {
-  pageSearcher.search('tempor')
-  pageSearcher.previousResult()
-  pageSearcher.addChangeHighlightListener((total, current) => {
+  const dom = createDOM()
+  const pageSearcher = createPageSearcher(dom)
+
+  expect.assertions(2)
+  pageSearcher.addSearchedListener((total) => {
     expect(total).toBe(3)
-    expect(current).toBe(1)
-    done()
   })
+  let count = 0
+  pageSearcher.addChangeHighlightListener((current) => {
+    count++
+    if (count === 2) {
+      expect(current).toBe(1)
+      done()
+    }
+  })
+
+  pageSearcher.search('tempor', 'gi')
+  pageSearcher.previousResult()
   pageSearcher.previousResult()
 })
 
 test('backward result back to last', (done) => {
-  pageSearcher.search('tempor')
-  pageSearcher.addChangeHighlightListener((total, current) => {
+  const dom = createDOM()
+  const pageSearcher = createPageSearcher(dom)
+
+  expect.assertions(2)
+  pageSearcher.addSearchedListener((total) => {
     expect(total).toBe(3)
+  })
+  pageSearcher.addChangeHighlightListener((current) => {
     expect(current).toBe(2)
     done()
   })
+
+  pageSearcher.search('tempor', 'gi')
   pageSearcher.previousResult()
 })
 
 test('clear result', (done) => {
-  pageSearcher.search('tempor')
-  pageSearcher.addChangeHighlightListener((total, current) => {
-    expect(total).toBe(0)
-    expect(current).toBe(undefined)
+  const dom = createDOM()
+  const pageSearcher = createPageSearcher(dom)
+
+  expect.assertions(2)
+  pageSearcher.addSearchedListener((total) => {
+    expect(total).toBe(3)
+  })
+  pageSearcher.addClearListener(() => {
+    expect(true).toBe(true)
     done()
   })
+
+  pageSearcher.search('tempor', 'gi')
   pageSearcher.clear()
 })
 
 test('search 2 times', (done) => {
-  pageSearcher.search('tempor')
-  let step = 0
-  pageSearcher.addChangeHighlightListener((total, current) => {
-    step++
-    if (step === 1) { // clear
-      expect(total).toBe(0)
-      expect(current).toBe(undefined)
-    } else if (step === 2) {
+  const dom = createDOM()
+  const pageSearcher = createPageSearcher(dom)
+
+  expect.assertions(3)
+  let searchCount = 0
+  pageSearcher.addSearchedListener((total) => {
+    searchCount++
+    if (searchCount === 1) {
+      expect(total).toBe(3)
+    } else if (searchCount === 2) {
       expect(total).toBe(4)
-      expect(current).toBe(0) // 2nd result
       done()
     }
   })
-  pageSearcher.search('quis')
+  pageSearcher.addClearListener(() => {
+    expect(searchCount).toBe(1)
+  })
+
+  pageSearcher.search('tempor', 'gi')
+  pageSearcher.search('quis', 'gi')
 })
 
 test('another search with regexp string which matched wider', (done) => {
-  pageSearcher.search('l\\w+')
-  let step = 0
-  pageSearcher.addChangeHighlightListener((total, current) => {
-    step++
-    if (step === 1) { // clear
-      expect(total).toBe(0)
-      expect(current).toBe(undefined)
-    } else if (step === 2) {
+  const dom = createDOM()
+  const pageSearcher = createPageSearcher(dom)
+
+  expect.assertions(3)
+  let searchCount = 0
+  pageSearcher.addSearchedListener((total) => {
+    searchCount++
+    if (searchCount === 1) {
+      expect(total).toBe(51)
+    } else if (searchCount === 2) {
       expect(total).toBe(5)
-      expect(current).toBe(0) // another search
       done()
     }
   })
-  pageSearcher.search('l\\w+\\.')
+  pageSearcher.addClearListener(() => {
+    expect(searchCount).toBe(1)
+  })
+
+  pageSearcher.search('l\\w+', 'gi')
+  pageSearcher.search('l\\w+\\.', 'gi')
 })
 
 test('clear result if search by empty text', (done) => {
-  pageSearcher.search('tempor')
-  pageSearcher.addChangeHighlightListener((total, current) => {
-    expect(total).toBe(0)
-    expect(current).toBe(undefined)
+  const dom = createDOM()
+  const pageSearcher = createPageSearcher(dom)
+
+  expect.assertions(1)
+  pageSearcher.addClearListener(() => {
+    expect(true).toBe(true)
     done()
   })
-  pageSearcher.search('')
+
+  pageSearcher.search('tempor', 'gi')
+  pageSearcher.search('', 'gi')
 })
 
 test('search over DOMs', (done) => {
-  pageSearcher.addChangeHighlightListener((total, current) => {
+  const dom = createDOM()
+  const pageSearcher = createPageSearcher(dom)
+
+  expect.assertions(1)
+  pageSearcher.addSearchedListener((total) => {
     expect(total).toBe(2)
-    expect(current).toBe(0)
     done()
   })
-  pageSearcher.search('ipsum\\s\\w+\\ssit\\samet')
+
+  pageSearcher.search('ipsum\\s\\w+\\ssit\\samet', 'gi')
 })
 
 test('search dom including script tags', (done) => {
-  const rootDOM = document.createElement('body')
-  rootDOM.innerHTML = `
-<h1>Test DOMs</h1>
-<section>
-  <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
-  <p>Curabitur pretium tincidunt lacus. Nulla gravida orci a odio. Nullam varius, turpis et commodo pharetra, est eros bibendum elit, nec luctus magna felis sollicitudin mauris. Integer in mauris eu nibh euismod gravida. Duis ac tellus et risus vulputate vehicula. Donec lobortis risus a elit. Etiam tempor. Ut ullamcorper, ligula eu tempor congue, eros est euismod turpis, id tincidunt sapien risus a quam. Maecenas fermentum consequat mi. Donec fermentum. Pellentesque malesuada nulla a mi. Duis sapien sem, aliquet nec, commodo eget, consequat quis, neque. Aliquam faucibus, elit ut dictum aliquet, felis nisl adipiscing sapien, sed malesuada diam lacus eget erat. Cras mollis scelerisque nunc. Nullam arcu. Aliquam consequat. Curabitur augue lorem, dapibus quis, laoreet et, pretium ac, nisi. Aenean magna nisl, mollis quis, molestie eu, feugiat in, orci. In hac habitasse platea dictumst.</p>
-  <script>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</script>
-  <noscript>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</noscript>
-</section>
-`
-  const pageSearcher = createPageSearcher(rootDOM)
+  const dom = createDOMWithScriptTag()
+  const pageSearcher = createPageSearcher(dom)
 
-  pageSearcher.addChangeHighlightListener((total, current) => {
+  expect.assertions(1)
+  pageSearcher.addSearchedListener((total) => {
     expect(total).toBe(51)
-    expect(current).toBe(0)
     done()
   })
-  pageSearcher.search('l\\w+')
+
+  pageSearcher.search('l\\w+', 'gi')
+})
+
+test('search with `g` flag', (done) => {
+  const dom = createDOM()
+  const pageSearcher = createPageSearcher(dom)
+
+  expect.assertions(1)
+  pageSearcher.addSearchedListener((total) => {
+    expect(total).toBe(3)
+    done()
+  })
+
+  pageSearcher.search('Nulla', 'g')
+})
+
+test('search with invalid flag', (done) => {
+  const dom = createDOM()
+  const pageSearcher = createPageSearcher(dom)
+
+  expect.assertions(1)
+  pageSearcher.addErrorListener((error) => {
+    expect(error.type).toBe(PageSearcher.ErrorType.InvalidFlags)
+    done()
+  })
+
+  pageSearcher.search('Lorem', 'hoge')
 })

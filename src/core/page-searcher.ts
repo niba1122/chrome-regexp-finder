@@ -1,3 +1,5 @@
+import { createStore } from "./store"
+
 interface HighlightGroup {
   clear(): void
 }
@@ -7,38 +9,36 @@ interface Highlight {
   unselect(): void
 }
 
-interface Store<HG, H> {
-  setSearchResult(highlightGroups: HG[], highlights: H[]): void
-  clear(): void
-  isCleared(): boolean
-  forwardSelectedHighlight(): void
-  backwardSelectedHighlight(): void
-  getSelectedHighlight(): H
-  onClear(listener: Store.ClearListener<HG>): void
-  onChangeHighlightSelection(listener: Store.ChangeHighlightSelectionListener<H>): void
-}
-
-namespace Store {
-  export type ClearListener<HG> = (highlightGroups: HG[]) => void
-  export type ChangeHighlightSelectionListener<H> = (args: {
-    previousHighlight?: H,
-    nextHighlight?: H,
-    total: number,
-    nextIndex?: number
-  }) => void
-}
-
 export interface PageSearcher {
-  search(query: string): void
+  search(query: string, flags: string): void
   nextResult(): void
   previousResult(): void
   clear(): void
   addChangeHighlightListener(listener: PageSearcher.ChangeHighlightListener): PageSearcher.Unsubscriber
+  addSearchedListener(listener: PageSearcher.SearchedListener): PageSearcher.Unsubscriber
+  addClearListener(listener: PageSearcher.ClearListener): PageSearcher.Unsubscriber
+  addErrorListener(listener: PageSearcher.ErrorListener): PageSearcher.Unsubscriber
 }
 
-namespace PageSearcher {
-  export type ChangeHighlightListener = (total: number, current?: number) => void
+type GlobalError = Error
+export namespace PageSearcher {
+  export type ChangeHighlightListener = (current: number) => void
+  export type SearchedListener = (total: number) => void
+  export type ClearListener = () => void
+  export type ErrorListener = (error: PageSearcher.Error) => void
   export type Unsubscriber = () => void
+
+  export enum ErrorType {
+    InvalidFlags, Unhandled
+  }
+  export interface InvalidFlagsError {
+    type: ErrorType.InvalidFlags
+  }
+  export interface UnhandledError {
+    type: ErrorType.Unhandled
+    error: GlobalError
+  }
+  export type Error = InvalidFlagsError | UnhandledError
 }
 
 function createHighlightGroup(highlightGroupDOM: HTMLElement): HighlightGroup {
@@ -93,117 +93,33 @@ function createHighlight(doms: HTMLElement[]): Highlight {
   }
 }
 
-function createStore<HG, H>(): Store<HG, H> {
-  let highlightGroups: HG[] = []
-  let highlights: H[] = []
-  let selectedHighlightIndex = 0
-
-  let clearListener: Store.ClearListener<HG> | null = null
-  let changeHighlightSelectionListener: Store.ChangeHighlightSelectionListener<H> | null = null
-
-  function setSearchResult(hg: HG[], h: H[]) {
-    highlightGroups = hg
-    highlights = h
-    selectedHighlightIndex = 0
-    if (changeHighlightSelectionListener) {
-      changeHighlightSelectionListener({
-        nextHighlight: highlights[selectedHighlightIndex],
-        total: highlights.length,
-        nextIndex: highlights.length > 0 ? selectedHighlightIndex : undefined
-      })
-    }
-  }
-
-  function clear() {
-    if (clearListener) {
-      clearListener(highlightGroups)
-    }
-    const previousHighlight = highlights[selectedHighlightIndex]
-    highlightGroups = []
-    highlights = []
-    selectedHighlightIndex = 0
-    if (changeHighlightSelectionListener) {
-      changeHighlightSelectionListener({
-        previousHighlight: previousHighlight,
-        total: highlights.length,
-      })
-    }
-  }
-
-  function isCleared(): boolean {
-    return highlightGroups.length === 0 && highlights.length === 0 && selectedHighlightIndex === 0
-  }
-
-  function forwardSelectedHighlight() {
-    if (!highlights.length) { return }
-    const previousHighlight = highlights[selectedHighlightIndex]
-    selectedHighlightIndex++
-    if (highlights.length === selectedHighlightIndex) {
-      selectedHighlightIndex = 0
-    }
-    if (changeHighlightSelectionListener) {
-      changeHighlightSelectionListener({
-        previousHighlight: previousHighlight,
-        nextHighlight: highlights[selectedHighlightIndex],
-        total: highlights.length,
-        nextIndex: selectedHighlightIndex
-      })
-    }
-  }
-
-  function backwardSelectedHighlight() {
-    if (!highlights.length) { return }
-    const previousHighlight = highlights[selectedHighlightIndex]
-    if (selectedHighlightIndex === 0) {
-      selectedHighlightIndex = highlights.length
-    }
-    selectedHighlightIndex--
-    if (changeHighlightSelectionListener) {
-      changeHighlightSelectionListener({
-        previousHighlight: previousHighlight,
-        nextHighlight: highlights[selectedHighlightIndex],
-        total: highlights.length,
-        nextIndex: selectedHighlightIndex
-      })
-    }
-  }
-
-  function getSelectedHighlight(): H {
-    return highlights[selectedHighlightIndex]
-  }
-
-  function onClear(listener: Store.ClearListener<HG>) {
-    clearListener = listener
-  }
-
-  function onChangeHighlightSelection(listener: Store.ChangeHighlightSelectionListener<H>) {
-    changeHighlightSelectionListener = listener
-  }
-
-  return {
-    setSearchResult,
-    clear,
-    isCleared,
-    forwardSelectedHighlight,
-    backwardSelectedHighlight,
-    getSelectedHighlight,
-    onClear,
-    onChangeHighlightSelection
-  }
-}
-
 export function createPageSearcher(rootDOM: HTMLElement): PageSearcher {
   let changeHighlightListener: PageSearcher.ChangeHighlightListener | null = null
+  let searchedListener: PageSearcher.SearchedListener | null = null
+  let clearListener: PageSearcher.ClearListener | null = null
+  let errorListener: PageSearcher.ErrorListener | null = null
   const store = createStore<HighlightGroup, Highlight>()
 
   store.onClear((_highlightGroups) => {
     HighlightGroup.clearAll()
+    if (clearListener) {
+      clearListener()
+    }
+  })
+
+  store.onSearched(({
+    initialHighlight,
+    total
+  }) => {
+    initialHighlight?.select()
+    if (searchedListener) {
+      searchedListener(total)
+    }
   })
 
   store.onChangeHighlightSelection(({
     previousHighlight,
     nextHighlight,
-    total,
     nextIndex
   }) => {
     if (previousHighlight) {
@@ -214,34 +130,38 @@ export function createPageSearcher(rootDOM: HTMLElement): PageSearcher {
     }
 
     if (changeHighlightListener) {
-      changeHighlightListener(total, nextIndex)
+      changeHighlightListener(nextIndex)
     }
   })
 
-  function getTextNodes(dom: Node): [Node[], number[], number] {
-    let nodes: Node[] = []
-    let nodeTextStartIndices: number[] = []
+  function getTextNodes(rootDOM: Node): [Node[], number[]] {
+    function _getTextNodes(rootDOM: Node): [Node[], number[], number] {
+      let nodes: Node[] = []
+      let nodeTextStartIndices: number[] = []
 
-    let textIndex = 0 
-    dom.childNodes.forEach((node) => {
-      if (node.nodeType === Node.TEXT_NODE) {
-        if (node.textContent) {
-          nodes.push(node)
-          nodeTextStartIndices.push(textIndex)
-          textIndex += node.textContent.length
+      let textIndex = 0 
+      rootDOM.childNodes.forEach((node) => {
+        if (node.nodeType === Node.TEXT_NODE) {
+          if (node.textContent) {
+            nodes.push(node)
+            nodeTextStartIndices.push(textIndex)
+            textIndex += node.textContent.length
+          }
+        } else {
+          let [childNodes, childNodeTextStartIndices, childTextCount] = _getTextNodes(node)
+          nodes = nodes.concat(childNodes)
+          nodeTextStartIndices = nodeTextStartIndices.concat(childNodeTextStartIndices.map((i) => i + textIndex))
+          textIndex += childTextCount
         }
-      } else {
-        let [childNodes, childNodeTextStartIndices, childTextCount] = getTextNodes(node)
-        nodes = nodes.concat(childNodes)
-        nodeTextStartIndices = nodeTextStartIndices.concat(childNodeTextStartIndices.map((i) => i + textIndex))
-        textIndex += childTextCount
-      }
 
-    })
-    return [nodes, nodeTextStartIndices, textIndex]
+      })
+      return [nodes, nodeTextStartIndices, textIndex]
+    }
+    const result = _getTextNodes(rootDOM)
+    return [result[0], result[1]]
   }
 
-  function search(query: string) {
+  function search(query: string, flags: string) {
     if (query === '') {
       store.clear()
       return
@@ -250,7 +170,31 @@ export function createPageSearcher(rootDOM: HTMLElement): PageSearcher {
       store.clear()
     }
 
-    const queryRegExp = new RegExp(query, 'gi')
+    const queryRegExp = (() => {
+      try {
+        return new RegExp(query, flags)
+      } catch (e) {
+        return e as Error
+      }
+    })()
+    if (queryRegExp instanceof Error) {
+      if (errorListener) {
+        const mappedError: PageSearcher.Error = (() => {
+          if (queryRegExp.message.includes('flags')) {
+            return {
+              type: PageSearcher.ErrorType.InvalidFlags,
+            } as PageSearcher.InvalidFlagsError
+          } else {
+            return {
+              type: PageSearcher.ErrorType.Unhandled,
+              error: queryRegExp
+            } as PageSearcher.UnhandledError
+          }
+        })()
+        errorListener(mappedError)
+      }
+      return
+    }
 
     function htmlElementIsVisible(element: HTMLElement): boolean {
       const rect = element.getBoundingClientRect()
@@ -357,11 +301,35 @@ export function createPageSearcher(rootDOM: HTMLElement): PageSearcher {
     }
   }
 
+  function addSearchedListener(listener: PageSearcher.SearchedListener) {
+    searchedListener = listener
+    return () => {
+      searchedListener = null
+    }
+  }
+
+  function addClearListener(listener: PageSearcher.ClearListener) {
+    clearListener = listener
+    return () => {
+      clearListener = null
+    }
+  }
+
+  function addErrorListener(listener: PageSearcher.ErrorListener) {
+    errorListener = listener
+    return () => {
+      errorListener = null
+    }
+  }
+
   return {
     search,
     nextResult,
     previousResult,
     clear,
-    addChangeHighlightListener
+    addChangeHighlightListener,
+    addSearchedListener,
+    addClearListener,
+    addErrorListener
   }
 }

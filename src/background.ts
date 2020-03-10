@@ -1,11 +1,10 @@
 'use strict';
 
-import { ClearResult, MessageType } from "./message-type";
+import { ClearResultMessage, MessageType } from "./message-type";
 
 chrome.tabs.onActivated.addListener((activeInfo) => {
-  const message: ClearResult = {
-    type: MessageType.ClearResult,
-    payload: undefined
+  const message: ClearResultMessage = {
+    type: MessageType.ClearResult
   }
   chrome.tabs.sendMessage(
     activeInfo.tabId,
@@ -18,9 +17,8 @@ chrome.tabs.onUpdated.addListener((_tabId, _changeInfo, tab) => {
     chrome.tabs.executeScript({
       file: 'contentScript.js'
     })
-    const message: ClearResult = {
-      type: MessageType.ClearResult,
-      payload: undefined
+    const message: ClearResultMessage = {
+      type: MessageType.ClearResult
     }
     tab.id && chrome.tabs.sendMessage(
       tab.id,
