@@ -1,8 +1,8 @@
-import { Search, MessageType, NextResult, PreviousResult, GetCursorSelection, isChangeHighlight, ChangeHighlight, Searched, isSearched, Cleared, isCleared, MessageError, isError } from "../message-type";
+import { SearchMessage, MessageType, NextResultMessage, PreviousResultMessage, GetCursorSelectionMessage, ChangeHighlightMessage, SearchedMessage, ClearedMessage, ErrorMessage, Message } from "../message-type";
 
-export function subscribeSearchedMessage(callback: (request: Searched) => void) {
-  chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
-    if (isSearched(request)) {
+export function subscribeSearchedMessage(callback: (request: SearchedMessage) => void) {
+  chrome.runtime.onMessage.addListener((request: Message, _sender, sendResponse) => {
+    if (request.type === MessageType.Searched) {
       callback(request)
     }
     sendResponse({})
@@ -10,9 +10,9 @@ export function subscribeSearchedMessage(callback: (request: Searched) => void) 
   })
 }
 
-export function subscribeChangeHighlightMessage(callback: (request: ChangeHighlight) => void) {
-  chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
-    if (isChangeHighlight(request)) {
+export function subscribeChangeHighlightMessage(callback: (request: ChangeHighlightMessage) => void) {
+  chrome.runtime.onMessage.addListener((request: Message, _sender, sendResponse) => {
+    if (request.type === MessageType.ChangeHighlight) {
       callback(request)
     }
     sendResponse({})
@@ -20,9 +20,9 @@ export function subscribeChangeHighlightMessage(callback: (request: ChangeHighli
   })
 }
 
-export function subscribeClearedMessage(callback: (request: Cleared) => void) {
-  chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
-    if (isCleared(request)) {
+export function subscribeClearedMessage(callback: (request: ClearedMessage) => void) {
+  chrome.runtime.onMessage.addListener((request: Message, _sender, sendResponse) => {
+    if (request.type === MessageType.Cleared) {
       callback(request)
     }
     sendResponse({})
@@ -30,9 +30,9 @@ export function subscribeClearedMessage(callback: (request: Cleared) => void) {
   })
 }
 
-export function subscribeErrorMessage(callback: (request: MessageError) => void) {
-  chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
-    if (isError(request)) {
+export function subscribeErrorMessage(callback: (request: ErrorMessage) => void) {
+  chrome.runtime.onMessage.addListener((request: Message, _sender, sendResponse) => {
+    if (request.type === MessageType.Error) {
       callback(request)
     }
     sendResponse({})
@@ -44,9 +44,8 @@ export function sendGetCursorSelectionMessage(callback: (text: string | undefine
   chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
     const tab = tabs[0];
     if (tab.id) {
-      const message: GetCursorSelection = {
-        type: MessageType.GetCursorSelection,
-        payload: undefined
+      const message: GetCursorSelectionMessage = {
+        type: MessageType.GetCursorSelection
       }
       chrome.tabs.sendMessage(
         tab.id,
@@ -60,7 +59,7 @@ export function sendGetCursorSelectionMessage(callback: (text: string | undefine
 }
 
 export function sendSearchMessage(query: string, flags: string) {
-  const message: Search = {
+  const message: SearchMessage = {
     type: MessageType.Search,
     payload: {
       query,
@@ -80,9 +79,8 @@ export function sendSearchMessage(query: string, flags: string) {
 }
 
 export function sendNextResultMessage() {
-  const message: NextResult = {
-    type: MessageType.NextResult,
-    payload: undefined
+  const message: NextResultMessage = {
+    type: MessageType.NextResult
   }
 
   chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
@@ -97,9 +95,8 @@ export function sendNextResultMessage() {
 }
 
 export function sendPreviousResultMessage() {
-  const message: PreviousResult = {
-    type: MessageType.PreviousResult,
-    payload: undefined
+  const message: PreviousResultMessage = {
+    type: MessageType.PreviousResult
   }
 
   chrome.tabs.query({ active: true, currentWindow: true }, tabs => {

@@ -3,7 +3,7 @@
 // To output css, import is required
 import './popup.css'
 
-import { MessageType, ClearResult } from './message-type';
+import { MessageType, ClearResultMessage } from './message-type';
 import * as ReactDOM from 'react-dom';
 import App from './popup/App';
 import * as React from 'react';
@@ -21,9 +21,8 @@ addEventListener('unload', (_event) => {
     const tab = tabs[0]
     if (!tab.id) { return }
 
-    const message: ClearResult = {
-      type: MessageType.ClearResult,
-      payload: undefined
+    const message: ClearResultMessage = {
+      type: MessageType.ClearResult
     }
     background.chrome.tabs.sendMessage(
       tab.id,
