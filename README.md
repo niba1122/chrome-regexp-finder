@@ -10,8 +10,7 @@ Moreover, this extension does not require all-url access permission.
 
 ## Install
 
-[**Chrome** extension](https://chrome.google.com/webstore/detail/regexp-finder/hcgbknhogabmcmldkfgnmmjchljjfinh
-?hl=ja)
+[chrome web store](https://chrome.google.com/webstore/detail/regexp-finder/hcgbknhogabmcmldkfgnmmjchljjfinh?hl=ja)
 
 ## How to use
 
