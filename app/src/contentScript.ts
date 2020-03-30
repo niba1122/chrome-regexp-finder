@@ -1,5 +1,5 @@
 import { ChangeHighlightMessage, MessageType, SearchedMessage, ClearedMessage, ErrorMessage, Message } from "./message-type"
-import { createPageSearcher } from "./core/page-searcher";
+import { createPageSearcher } from "@chrome-regexp-finder/core";
 
 declare global {
   interface Window {

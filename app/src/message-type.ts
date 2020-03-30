@@ -1,4 +1,4 @@
-import { PageSearcher } from "./core/page-searcher"
+import { PageSearcher } from "@chrome-regexp-finder/core"
 
 export enum MessageType {
   Search = 'SEARCH',

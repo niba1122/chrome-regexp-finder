@@ -170,13 +170,12 @@ export function createPageSearcher(rootDOM: HTMLElement): PageSearcher {
       store.clear()
     }
 
-    const queryRegExp = (() => {
+    let queryRegExp: RegExp | Error
       try {
-        return new RegExp(query, flags)
+        queryRegExp = new RegExp(query, flags)
       } catch (e) {
-        return e as Error
+        queryRegExp = e
       }
-    })()
     if (queryRegExp instanceof Error) {
       if (errorListener) {
         const mappedError: PageSearcher.Error = (() => {
@@ -209,7 +208,7 @@ export function createPageSearcher(rootDOM: HTMLElement): PageSearcher {
     const allText = rootDOM.textContent
     if (!allText) return
 
-    let match 
+    let match
     let matchedTextStartIndices = []
     let matchedTextEndIndices = []
     while (match = queryRegExp.exec(allText)) {

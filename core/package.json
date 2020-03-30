@@ -1,0 +1,23 @@
+{
+  "name": "@chrome-regexp-finder/core",
+  "version": "1.0.0",
+  "description": "Repository of chrome extension Regexp Finder",
+  "main": "./build/index.js",
+  "scripts": {
+    "dev": "webpack --watch --config webpack.dev.js",
+    "build": "webpack --config webpack.prod.js",
+    "test": "jest"
+  },
+  "devDependencies": {
+    "@types/jest": "^24.0.25",
+    "clean-webpack-plugin": "^3.0.0",
+    "jest": "^24.9.0",
+    "ts-jest": "^24.2.0",
+    "ts-loader": "^6.2.1",
+    "typescript": "^3.7.4",
+    "webpack": "^4.41.4",
+    "webpack-cli": "^3.3.10",
+    "webpack-merge": "^4.2.2"
+  },
+  "types": "./build/index.d.ts"
+}
