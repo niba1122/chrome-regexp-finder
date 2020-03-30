@@ -4,7 +4,7 @@
   "description": "Repository of chrome extension Regexp Finder",
   "main": "./build/index.js",
   "scripts": {
-    "dev": "webpack --watch --config webpack.dev.js",
+    "watch": "webpack --watch --config webpack.dev.js",
     "build": "webpack --config webpack.prod.js",
     "test": "jest"
   },
