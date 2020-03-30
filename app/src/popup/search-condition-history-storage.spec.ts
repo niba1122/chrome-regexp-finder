@@ -1,4 +1,4 @@
-import SearchConditionHistoryStorage from "../src/popup/search-condition-history-storage"
+import SearchConditionHistoryStorage from "./search-condition-history-storage"
 
 class MockStorage {
   data: { [key: string]: string } = {}

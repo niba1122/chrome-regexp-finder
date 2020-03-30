@@ -4,10 +4,23 @@ on: [push]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v1
-    - name: Run Jest
-      uses: stefanoeb/jest-action@1.0.2
+    - name: 'App: Install dependencies'
+      run: |
+        cd app
+        npm install
+    - name: 'App: Run test'
+      run: |
+        cd app
+        npm run test
+    - name: 'Core: Install dependencies'
+      run: |
+        cd core
+        npm install
+    - name: 'Core: Run test'
+      run: |
+        cd core
+        npm run test
+

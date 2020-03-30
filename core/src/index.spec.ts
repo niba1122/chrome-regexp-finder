@@ -1,5 +1,5 @@
-import { createPageSearcher, PageSearcher } from "../src/core/page-searcher";
-import { createDOM, createDOMWithScriptTag } from "../src/fixtures/dom"
+import { createPageSearcher, PageSearcher } from "./";
+import { createDOM, createDOMWithScriptTag } from "./fixtures/dom"
 
 function setupPolyfill() {
   // https://github.com/jsdom/jsdom/issues/1261#issuecomment-362928131

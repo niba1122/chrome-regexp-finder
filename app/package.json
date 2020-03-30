@@ -1,5 +1,5 @@
 {
-  "name": "chrome-regexp-finder",
+  "name": "@chrome-regexp-finder/app",
   "version": "1.0.0",
   "description": "Repository of chrome extension Regexp Finder",
   "private": true,
@@ -16,18 +16,20 @@
     "copy-webpack-plugin": "^5.1.1",
     "css-loader": "^3.4.0",
     "file-loader": "^5.0.2",
-    "jest": "^24.9.0",
+    "jest": "^25.2.4",
     "mini-css-extract-plugin": "^0.9.0",
     "size-plugin": "^2.0.1",
-    "ts-jest": "^24.2.0",
+    "ts-jest": "^25.3.0",
     "ts-loader": "^6.2.1",
     "typescript": "^3.7.4",
-    "webpack": "^4.41.4",
+    "webpack": "^4.42.1",
     "webpack-cli": "^3.3.10",
     "webpack-merge": "^4.2.2"
   },
   "dependencies": {
+    "@chrome-regexp-finder/core": "file:../core",
     "react": "^16.13.0",
-    "react-dom": "^16.13.0"
+    "react-dom": "^16.13.0",
+    "terrarium-browser-host": "../../terrarium-browser-host"
   }
 }
