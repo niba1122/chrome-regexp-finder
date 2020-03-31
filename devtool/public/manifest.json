@@ -1,0 +1,32 @@
+{
+  "manifest_version": 2,
+  "name": "RegExp Finder",
+  "version": "1.0.0",
+  "description": "RegExp Finder enables you to search words by JavaScript regular expression on web pages.",
+  "icons": {
+    "16": "icons/icon_16.png",
+    "32": "icons/icon_32.png",
+    "48": "icons/icon_48.png",
+    "128": "icons/icon_128.png"
+  },
+  "background": {
+    "scripts": [
+      "background.js"
+    ],
+    "persistent": false
+  },
+  "browser_action": {
+    "default_title": "RegExp Finder",
+    "default_popup": "popup.html"
+  },
+  "permissions": [
+    "activeTab"
+  ],
+  "commands": {
+    "_execute_browser_action": {
+      "suggested_key": {
+        "default": "Ctrl+J"
+      }
+    }
+  }
+}
