@@ -1,18 +1,8 @@
 'use strict';
 
-import { ClearResultMessage, MessageType } from "./message-type";
+import { getMessageService } from "./messageService";
 
 const CONTENT_SCRIPT_PATH = 'contentScript.js'
-
-function sendClearResultMessage(tabId: number) {
-  const message: ClearResultMessage = {
-    type: MessageType.ClearResult
-  }
-  chrome.tabs.sendMessage(
-    tabId,
-    message
-  )
-}
 
 chrome.runtime.onConnect.addListener(function(devToolsConnection) {
   let tabId: number | null = null
@@ -29,7 +19,8 @@ chrome.runtime.onConnect.addListener(function(devToolsConnection) {
       chrome.tabs.executeScript({
         file: CONTENT_SCRIPT_PATH
       })
-      sendClearResultMessage(tab.id)
+      const messageService = getMessageService(async () => tab.id)
+      messageService.sendClearResultMessage()
     }
   }
 
@@ -39,6 +30,7 @@ chrome.runtime.onConnect.addListener(function(devToolsConnection) {
   devToolsConnection.onDisconnect.addListener(() => {
     devToolsConnection.onMessage.removeListener(devToolsMessageListener);
     chrome.tabs.onUpdated.removeListener(tabUpdatedListener)
-    tabId && sendClearResultMessage(tabId)
+    const messageService = getMessageService(async () => tabId)
+    messageService.sendClearResultMessage()
   })
 })

@@ -1,54 +1,124 @@
 import * as React from "react"
-import { useState, useEffect, useMemo } from "react"
-import { SearchMessage, MessageType, NextResultMessage, PreviousResultMessage } from "../message-type"
+import { useState, useEffect, useRef } from "react"
+import SearchCondition, { searchConditionsAreEqual } from "./SearchCondition"
+import { getMessageService } from "../messageService"
+
+const INITIAL_REGEXP_FLAGS = 'gi'
+
+function useValueRef<T>(value: T) {
+  const ref = useRef(value)
+  useEffect(() => {
+    ref.current = value
+  }, [value])
+  return ref
+}
+
+const messageService = getMessageService(async () => chrome.devtools.inspectedWindow.tabId)
 
 const App = () => {
+  const [total, setTotal] = useState(0)
+  const [current, setCurrent] = useState<number | undefined>()
 
-  const [query, setQuery] = useState('')
-  const [flags, setFlags] = useState('')
+  const [searchCondition, setSearchCondition] = useState<SearchCondition>({
+    query: '',
+    flags: INITIAL_REGEXP_FLAGS
+  })
+  const searchConditionRef = useValueRef(searchCondition)
+
+  const [previousSearchCondition, setPreviousSearchCondition] = useState<SearchCondition | null>(null)
+  const previousSearchConditionRef = useValueRef(previousSearchCondition)
 
   const handleClickSearchButton = () => {
-    const message: SearchMessage = {
-      type: MessageType.Search,
-      payload: {
-        query,
-        flags
-      }
+    if (
+      previousSearchCondition
+      && searchConditionsAreEqual(previousSearchCondition, searchCondition)
+    ) {
+      messageService.sendNextResultMessage()
+    } else {
+      messageService.sendSearchMessage(searchCondition.query, searchCondition.flags)
     }
+    setPreviousSearchCondition(searchCondition)
+  }
 
-    chrome.tabs.sendMessage(
-      chrome.devtools.inspectedWindow.tabId,
-      message
-    )
+  const handleChangeSearchText: React.ChangeEventHandler<HTMLInputElement> = (event) => {
+    const query = event.target.value
+    setSearchCondition((state) => ({...state, query }))
+  }
+
+  const handleChangeFlags: React.ChangeEventHandler<HTMLInputElement> = (event) => {
+    const flags = event.target.value
+    setSearchCondition((state) => ({...state, flags }))
   }
 
   const handleClickPreviousButton = () => {
-    const message: PreviousResultMessage = {
-      type: MessageType.PreviousResult
-    }
-
-    chrome.tabs.sendMessage(
-      chrome.devtools.inspectedWindow.tabId,
-      message
-    )
+    messageService.sendPreviousResultMessage()
   }
 
   const handleClickNextButton = () => {
-    const message: NextResultMessage = {
-      type: MessageType.NextResult
-    }
-
-    chrome.tabs.sendMessage(
-      chrome.devtools.inspectedWindow.tabId,
-      message
-    )
+    messageService.sendNextResultMessage()
   }
 
+  const handleClearButton = () => {
+    setPreviousSearchCondition(null)
+    messageService.sendClearResultMessage()
+  }
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const searchCondition = searchConditionRef.current
+      const previousSearchCondition = previousSearchConditionRef.current
+      if (event.key === 'Enter') {
+        if (
+          previousSearchCondition
+          && searchConditionsAreEqual(previousSearchCondition, searchCondition)
+          && !event.shiftKey
+        ) {
+          messageService.sendNextResultMessage()
+        } else if (
+          previousSearchCondition
+          && searchConditionsAreEqual(previousSearchCondition, searchCondition)
+          && event.shiftKey
+        ) {
+          messageService.sendPreviousResultMessage()
+        } else {
+          messageService.sendSearchMessage(searchCondition.query, searchCondition.flags)
+        }
+        setPreviousSearchCondition(searchCondition)
+      }
+    }
+    addEventListener('keydown', handleKeyDown)
+
+    messageService.subscribeSearchedMessage((request) => {
+      const total = request.payload.total
+      setTotal(total)
+      if (total > 0) {
+        setCurrent(0)
+      } else {
+        setCurrent(undefined)
+      }
+    })
+
+    messageService.subscribeChangeHighlightMessage((request) => {
+      setCurrent(request.payload.current)
+    })
+
+    messageService.subscribeClearedMessage(() => {
+      setTotal(0)
+      setCurrent(undefined)
+    })
+
+    return () => {
+      removeEventListener('keydown', handleKeyDown)
+    }
+  }, [])
 
   return <div>
-    <input type="text" value={query} onChange={(event) => setQuery(event.target.value)} />
-    <input type="text" value={flags} onChange={(event) => setFlags(event.target.value)}/>
+    <h1>Regexp Finder Devtool</h1>
+    <input type="text" value={searchCondition.query} onChange={handleChangeSearchText} />
+    <input type="text" value={searchCondition.flags} onChange={handleChangeFlags}/>
+    {current !== undefined ? current + 1 : 0}&nbsp;/&nbsp;{total}
     <button onClick={handleClickSearchButton}>Search</button>
+    <button onClick={handleClearButton}>Clear</button>
     <br />
     <button onClick={handleClickPreviousButton}>↑</button>
     <button onClick={handleClickNextButton}>↓</button>
