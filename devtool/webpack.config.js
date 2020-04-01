@@ -8,7 +8,10 @@ const SRC_DIR = path.resolve(__dirname, './src')
 const OUT_DIR = path.resolve(__dirname, './build')
 
 const common = {
+  mode: 'development',
   entry: {
+    devtools: `${SRC_DIR}/devtools.ts`,
+    panel: `${SRC_DIR}/panel.ts`,
     contentScript: `${SRC_DIR}/contentScript.ts`,
     background: `${SRC_DIR}/background.ts`,
   },
