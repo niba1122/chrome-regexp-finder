@@ -4,6 +4,24 @@ import { getMessageService } from "./messageService";
 
 const CONTENT_SCRIPT_PATH = 'contentScript.js'
 
+chrome.runtime.onMessage.addListener((message, sender) => {
+  if (message.type === 'REQUEST_CORE_RUNTIME') {
+    fetch('./core.js')
+      .then((response) => {
+        return response.text()
+      })
+      .then((result) => {
+        if (sender.tab?.id) {
+          chrome.tabs.sendMessage(sender.tab?.id, {
+            type: 'RESPONSE_CORE_RUNTIME',
+            code: result
+          })
+        }
+      })
+  }
+  return true
+})
+
 chrome.runtime.onConnect.addListener(function(devToolsConnection) {
   let tabId: number | null = null
 

@@ -63,6 +63,16 @@ const App = () => {
     messageService.sendClearResultMessage()
   }
 
+  const handleClickReloadRuntimeButton = () => {
+    const tabId = chrome.devtools.inspectedWindow.tabId
+    chrome.tabs.sendMessage(
+      tabId,
+      {
+        type: 'RELOAD_RUNTIME'
+      }
+    )
+  }
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       const searchCondition = searchConditionRef.current
@@ -123,7 +133,9 @@ const App = () => {
     <button onClick={handleClickPreviousButton}>↑</button>
     <button onClick={handleClickNextButton}>↓</button>
     <br />
-    <button onClick={() => location.reload()}>Reload</button>
+    <button onClick={handleClickReloadRuntimeButton}>Reload Runtime</button>
+    {/* <br />
+    <button onClick={() => location.reload()}>Reload Devtool</button> */}
   </div>
 }
 export default App
