@@ -5,8 +5,9 @@
 /build-dev
 
 # production
-/build
+/build/*
 build.zip
+!/build/core.js
 
 # misc
 .DS_Store
