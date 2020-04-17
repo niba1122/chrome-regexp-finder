@@ -1,0 +1,16 @@
+# dependencies
+/node_modules
+
+# develop
+/build-dev
+
+# production
+/build/*
+build.zip
+!/build/core.js
+
+# misc
+.DS_Store
+
+npm-debug.log*
+size-plugin.json
