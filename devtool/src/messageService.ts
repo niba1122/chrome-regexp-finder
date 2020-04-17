@@ -106,8 +106,8 @@ export function getMessageService(getTabId: TabIdGetter) {
     })
   }
 
-  function sendClearResultMessage() {
-    getTabId().then((tabId) => {
+  async function sendClearResultMessage() {
+    await getTabId().then((tabId) => {
       if (tabId) {
         const message: ClearResultMessage = {
           type: MessageType.ClearResult

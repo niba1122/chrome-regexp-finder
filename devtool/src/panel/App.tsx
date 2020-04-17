@@ -63,7 +63,12 @@ const App = () => {
     messageService.sendClearResultMessage()
   }
 
-  const handleClickReloadRuntimeButton = () => {
+  const handleClickReloadRuntimeButton = async () => {
+    await messageService.sendClearResultMessage()
+    setSearchCondition({
+      query: '',
+      flags: INITIAL_REGEXP_FLAGS
+    })
     const tabId = chrome.devtools.inspectedWindow.tabId
     chrome.tabs.sendMessage(
       tabId,
