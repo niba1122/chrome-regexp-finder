@@ -63,7 +63,12 @@ const App = () => {
     messageService.sendClearResultMessage()
   }
 
-  const handleClickReloadRuntimeButton = () => {
+  const handleClickReloadCoreButton = async () => {
+    await messageService.sendClearResultMessage()
+    setSearchCondition({
+      query: '',
+      flags: INITIAL_REGEXP_FLAGS
+    })
     const tabId = chrome.devtools.inspectedWindow.tabId
     chrome.tabs.sendMessage(
       tabId,
@@ -133,7 +138,7 @@ const App = () => {
     <button onClick={handleClickPreviousButton}>↑</button>
     <button onClick={handleClickNextButton}>↓</button>
     <br />
-    <button onClick={handleClickReloadRuntimeButton}>Reload Runtime</button>
+    <button onClick={handleClickReloadCoreButton}>Reload Core</button>
     {/* <br />
     <button onClick={() => location.reload()}>Reload Devtool</button> */}
   </div>
