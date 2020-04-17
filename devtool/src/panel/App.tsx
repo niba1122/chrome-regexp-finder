@@ -63,7 +63,7 @@ const App = () => {
     messageService.sendClearResultMessage()
   }
 
-  const handleClickReloadRuntimeButton = async () => {
+  const handleClickReloadCoreButton = async () => {
     await messageService.sendClearResultMessage()
     setSearchCondition({
       query: '',
@@ -138,7 +138,7 @@ const App = () => {
     <button onClick={handleClickPreviousButton}>↑</button>
     <button onClick={handleClickNextButton}>↓</button>
     <br />
-    <button onClick={handleClickReloadRuntimeButton}>Reload Runtime</button>
+    <button onClick={handleClickReloadCoreButton}>Reload Core</button>
     {/* <br />
     <button onClick={() => location.reload()}>Reload Devtool</button> */}
   </div>
